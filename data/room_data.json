@@ -1,0 +1,137 @@
+[
+  {
+    "id": "loc_internal_01",
+    "name": "ห้องตรวจอายุรกรรม 1",
+    "description": "อาคาร 1 ชั้น 1"
+  },
+  {
+    "id": "loc_internal_02",
+    "name": "ห้องตรวจอายุรกรรม 2",
+    "description": "อาคาร 1 ชั้น 1"
+  },
+  {
+    "id": "loc_surgery_01",
+    "name": "ห้องตรวจศัลยกรรม 1",
+    "description": "อาคาร 1 ชั้น 2"
+  },
+  {
+    "id": "loc_surgery_02",
+    "name": "ห้องตรวจศัลยกรรม 2",
+    "description": "อาคาร 1 ชั้น 2"
+  },
+  {
+    "id": "loc_obgyn_01",
+    "name": "คลินิกสูตินรีเวช 1",
+    "description": "อาคาร 2 ชั้น 2"
+  },
+  {
+    "id": "loc_ped_01",
+    "name": "คลินิกกุมารเวชกรรม",
+    "description": "อาคาร 2 ชั้น 1 (โซนเด็ก)"
+  },
+  {
+    "id": "loc_ortho_01",
+    "name": "ห้องตรวจกระดูกและข้อ",
+    "description": "อาคาร 1 ชั้น 2"
+  },
+  {
+    "id": "loc_ophtha_01",
+    "name": "ศูนย์จักษุกรรม",
+    "description": "อาคาร 3 ชั้น 3"
+  },
+  {
+    "id": "loc_ent_01",
+    "name": "คลินิกหู คอ จมูก",
+    "description": "อาคาร 3 ชั้น 3"
+  },
+  {
+    "id": "loc_psych_01",
+    "name": "คลินิกจิตเวช",
+    "description": "อาคาร 3 ชั้น 4"
+  },
+  {
+    "id": "loc_dent_01",
+    "name": "ศูนย์ทันตกรรม",
+    "description": "อาคาร 4 ชั้น 2"
+  },
+  {
+    "id": "loc_derma_01",
+    "name": "ศูนย์ผิวหนังและความงาม",
+    "description": "อาคาร 4 ชั้น 3"
+  },
+  {
+    "id": "loc_cardio_01",
+    "name": "ศูนย์หัวใจ",
+    "description": "อาคาร 1 ชั้น 3"
+  },
+  {
+    "id": "loc_neuro_01",
+    "name": "ศูนย์สมองและระบบประสาท",
+    "description": "อาคาร 1 ชั้น 3"
+  },
+  {
+    "id": "loc_gastro_01",
+    "name": "ศูนย์ทางเดินอาหารและตับ",
+    "description": "อาคาร 1 ชั้น 4"
+  },
+  {
+    "id": "loc_pulmo_01",
+    "name": "คลินิกโรคระบบทางเดินหายใจ",
+    "description": "อาคาร 1 ชั้น 4"
+  },
+  {
+    "id": "loc_nephro_01",
+    "name": "ศูนย์ไตเทียม",
+    "description": "อาคาร 2 ชั้น 3"
+  },
+  {
+    "id": "loc_endo_01",
+    "name": "คลินิกเบาหวานและต่อมไร้ท่อ",
+    "description": "อาคาร 1 ชั้น 1"
+  },
+  {
+    "id": "loc_onco_01",
+    "name": "ศูนย์มะเร็ง",
+    "description": "อาคาร 5 ชั้น 1"
+  },
+  {
+    "id": "loc_radio_01",
+    "name": "แผนกรังสีวิทยา (X-Ray)",
+    "description": "อาคาร 1 ชั้น B"
+  },
+  {
+    "id": "loc_rehab_01",
+    "name": "ศูนย์เวชศาสตร์ฟื้นฟู",
+    "description": "อาคาร 5 ชั้น 2"
+  },
+  {
+    "id": "loc_er_01",
+    "name": "ห้องฉุกเฉิน (ER)",
+    "description": "อาคาร 1 ชั้น 1 (เปิด 24 ชม.)"
+  },
+  {
+    "id": "loc_id_01",
+    "name": "คลินิกโรคติดเชื้อ",
+    "description": "อาคาร 5 ชั้น 3"
+  },
+  {
+    "id": "loc_antiaging_01",
+    "name": "ศูนย์เวชศาสตร์ชะลอวัย",
+    "description": "อาคาร 4 ชั้น 4"
+  },
+  {
+    "id": "loc_trad_01",
+    "name": "คลินิกแพทย์แผนไทย",
+    "description": "อาคาร 5 ชั้น 4"
+  },
+  {
+    "id": "loc_or_01",
+    "name": "ห้องผ่าตัด 1 (OR)",
+    "description": "อาคาร 1 ชั้น 5"
+  },
+  {
+    "id": "loc_icu_01",
+    "name": "ห้องไอซียู (ICU)",
+    "description": "อาคาร 1 ชั้น 5"
+  }
+]

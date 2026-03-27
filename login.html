@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ - Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background: linear-gradient(135deg, #e0f7fa 0%, #0066cc 100%);
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-card {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .login-card h2 {
+            color: #0066cc;
+            margin-bottom: 5px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 600;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-family: 'Sarabun', sans-serif;
+            font-size: 1rem;
+        }
+        .btn-login {
+            background: #0066cc;
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn-login:hover { background: #004c99; }
+        .error-msg {
+            color: #dc3545;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            display: none;
+            background: #ffe6e6;
+            padding: 10px;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <i class="fa-solid fa-user-shield" style="font-size: 3rem; color: #0066cc; margin-bottom: 10px;"></i>
+        <h2>HOSPITAL CARE</h2>
+        <p style="color: #666; margin-bottom: 30px;">เข้าสู่ระบบจัดการฐานข้อมูล (Admin Panel)</p>
+
+        <div id="errorMsg" class="error-msg"><i class="fa-solid fa-circle-exclamation"></i> <span id="errorText">ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</span></div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label>ชื่อผู้ใช้ (Username)</label>
+                <input type="text" id="username" placeholder="กรอกชื่อผู้ใช้" required>
+            </div>
+            <div class="form-group">
+                <label>รหัสผ่าน (Password)</label>
+                <input type="password" id="password" placeholder="กรอกรหัสผ่าน" required>
+            </div>
+            <button type="submit" class="btn-login" id="loginBtn">เข้าสู่ระบบ <i class="fa-solid fa-right-to-bracket"></i></button>
+        </form>
+    </div>
+
+    <script type="module">
+        import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { db } from "./js/firebase-config.js";
+
+        document.getElementById('loginForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+            const btn = document.getElementById('loginBtn');
+            const errorBox = document.getElementById('errorMsg');
+            const errorText = document.getElementById('errorText');
+
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังตรวจสอบ...`;
+            btn.disabled = true;
+            errorBox.style.display = 'none';
+
+            try {
+                // ค้นหาผู้ใช้จากฐานข้อมูล
+                const q = query(collection(db, "users"), where("username", "==", user));
+                const snap = await getDocs(q);
+
+                if (snap.empty) {
+                    throw new Error("ไม่พบชื่อผู้ใช้นี้ในระบบ");
+                }
+
+                let loggedInUser = null;
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    if (data.password === pass) {
+                        loggedInUser = data;
+                    }
+                });
+
+                if (!loggedInUser) {
+                    throw new Error("รหัสผ่านไม่ถูกต้อง");
+                }
+
+                if (loggedInUser.is_active === false) {
+                    throw new Error("บัญชีนี้ถูกระงับการใช้งาน โปรดติดต่อ Admin");
+                }
+
+                // สำเร็จ! บันทึกข้อมูลการล็อคอินลง Session Storage
+                const sessionData = {
+                    username: loggedInUser.username,
+                    display_name: loggedInUser.display_name,
+                    role: loggedInUser.role
+                };
+                sessionStorage.setItem('hospitalAdminAuth', JSON.stringify(sessionData));
+
+                // เด้งไปหน้า Admin
+                window.location.href = 'admin.html';
+
+            } catch (error) {
+                errorText.innerText = error.message;
+                errorBox.style.display = 'block';
+                btn.innerHTML = `เข้าสู่ระบบ <i class="fa-solid fa-right-to-bracket"></i>`;
+                btn.disabled = false;
+            }
+        };
+    </script>
+</body>
+</html>

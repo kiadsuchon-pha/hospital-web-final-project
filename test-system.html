@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit Tests - Admin Panel</title>
+    <link rel="stylesheet" href="https://unpkg.com/mocha/mocha.css" />
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f0f2f5; }
+        #mocha { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: 0 auto; max-width: 800px; }
+        h1 { text-align: center; color: #333; }
+        .btn-back { display: block; width: fit-content; margin: 0 auto 20px; text-decoration: none; background: #666; color: white; padding: 8px 16px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <a href="admin.html" class="btn-back">← กลับหน้า Admin</a>
+    <h1>🧪 Unit Tests Report</h1>
+    
+    <div id="mocha"></div>
+
+    <script src="https://unpkg.com/mocha/mocha.js"></script>
+
+    <script class="mocha-init">
+        mocha.setup('bdd'); // ใช้รูปแบบ Behavior Driven Development (describe, it)
+        mocha.checkLeaks();
+    </script>
+
+    <script type="module">
+        // Import ไฟล์เทส
+        import "./js/admin.test.js";
+
+        // เริ่มรันการทดสอบ
+        mocha.run();
+    </script>
+</body>
+</html>

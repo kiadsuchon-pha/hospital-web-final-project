@@ -1,0 +1,422 @@
+/* =========================================
+   1. THEME & VARIABLES
+   ========================================= */
+html {
+    scroll-behavior: smooth;
+}
+
+:root {
+    --primary: #0066cc;
+    --secondary: #00cc99;
+    --accent: #f0f8ff;
+    --text-dark: #333;
+    --text-light: #666;
+    --white: #ffffff;
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 80px;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Sarabun', sans-serif;
+    color: var(--text-dark);
+    line-height: 1.6;
+    background-image:
+        linear-gradient(rgba(249, 251, 253, 0.9), rgba(249, 251, 253, 0.9)),
+        url('https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?q=80&w=2053&auto=format&fit=crop');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+}
+
+/* =========================================
+   2. UTILITIES & LAYOUT
+   ========================================= */
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+section {
+    padding: 80px 0;
+}
+
+h2 {
+    text-align: center;
+    font-size: 2.2rem;
+    margin-bottom: 50px;
+    color: var(--primary);
+    font-weight: 600;
+    position: relative;
+}
+
+h2::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 4px;
+    background: var(--secondary);
+    margin: 15px auto 0;
+    border-radius: 2px;
+}
+
+/* =========================================
+   3. NAVBAR
+   ========================================= */
+nav {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    backdrop-filter: blur(10px);
+}
+
+nav .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-links a {
+    color: var(--text-dark);
+    text-decoration: none;
+    margin-left: 30px;
+    font-weight: 500;
+    transition: 0.3s;
+}
+
+.nav-links a:hover {
+    color: var(--primary);
+}
+
+/* =========================================
+   4. HERO SECTION (#home)
+   ========================================= */
+#home {
+    height: 90vh;
+    background: linear-gradient(120deg, #e0f7fa 0%, #ffffff 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+#home h1 {
+    font-size: 3.5rem;
+    color: var(--primary);
+    margin-bottom: 20px;
+}
+
+.circle-bg {
+    position: absolute;
+    border-radius: 50%;
+    background: var(--primary);
+    opacity: 0.05;
+}
+
+.c1 {
+    width: 300px;
+    height: 300px;
+    top: -50px;
+    left: -50px;
+}
+
+.c2 {
+    width: 500px;
+    height: 500px;
+    bottom: -100px;
+    right: -100px;
+    background: var(--secondary);
+}
+
+/* =========================================
+   5. ABOUT SECTION
+   ========================================= */
+.white-card {
+    background: var(--white);
+    border-radius: 15px;
+    padding: 40px;
+    box-shadow: var(--shadow);
+    text-align: center;
+}
+
+/* =========================================
+   6. SERVICES SECTION & SWIPER CARD
+   ========================================= */
+#services {
+    background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+/* --- ทำให้ความสูงของการ์ดเท่ากันทุกใบ --- */
+.swiper-wrapper {
+    align-items: stretch;
+    /* บังคับให้ลูก (slide) ยืดความสูงเท่ากันหมด */
+}
+
+.swiper-slide {
+    height: auto !important;
+    /* ให้ Slide ขยายตามเนื้อหาที่ยาวที่สุด */
+    display: flex;
+    justify-content: center;
+    padding: 15px 0;
+    /* เผื่อพื้นที่ให้เงา box-shadow ไม่ถูกตัด */
+    transition: transform 0.4s ease, opacity 0.4s ease !important;
+}
+
+/* --- Service Card Styling --- */
+.service-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 35px 25px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f0f0f0;
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    overflow: hidden;
+
+    width: 100%;
+    /* ให้เต็มความกว้างของ slide */
+    height: 100%;
+    /* ให้เต็มความสูงของ slide */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+    box-sizing: border-box;
+}
+
+.service-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0, 102, 204, 0.15);
+    border-color: #b3d7ff;
+}
+
+.service-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    opacity: 0;
+    transition: 0.3s;
+}
+
+.service-card:hover::before {
+    opacity: 1;
+}
+
+/* --- Icon & Content --- */
+.service-icon {
+    width: 80px;
+    height: 80px;
+    background: #eef7ff;
+    color: var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    transition: 0.4s;
+    box-shadow: inset 0 0 20px rgba(0, 102, 204, 0.05);
+}
+
+.service-card:hover .service-icon {
+    background: var(--primary);
+    color: #fff;
+    transform: rotateY(180deg);
+    box-shadow: 0 10px 20px rgba(0, 102, 204, 0.3);
+}
+
+.service-card h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.doc-count-badge {
+    background: #f0fdf4;
+    color: #166534;
+    padding: 5px 15px;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 15px;
+    border: 1px solid #dcfce7;
+}
+
+.service-detail {
+    font-size: 0.95rem;
+    color: #777;
+    line-height: 1.6;
+}
+
+/* --- Swiper Navigation & Pagination --- */
+.swiper-pagination-bullet {
+    width: 10px;
+    height: 10px;
+    background: #ccc;
+    opacity: 1;
+    transition: 0.3s;
+}
+
+.swiper-pagination-bullet-active {
+    width: 30px;
+    border-radius: 5px;
+    background: var(--primary);
+}
+
+.custom-nav-btn {
+    color: #0066cc !important;
+    background: white;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: 0.3s;
+    font-weight: bold;
+}
+
+.custom-nav-btn:hover {
+    background: #0066cc;
+    color: white !important;
+    transform: scale(1.1);
+    box-shadow: 0 8px 20px rgba(0, 102, 204, 0.3);
+}
+
+.custom-nav-btn::after {
+    font-size: 1.2rem !important;
+    font-weight: bold;
+}
+
+.swiper-button-prev {
+    left: 0 !important;
+}
+
+.swiper-button-next {
+    right: 0 !important;
+}
+
+/* =========================================
+   7. CONTACT SECTION
+   ========================================= */
+.contact-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    align-items: stretch;
+}
+
+.contact-info {
+    flex: 1;
+    min-width: 300px;
+    background: white;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 25px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.contact-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.contact-item i {
+    width: 50px;
+    height: 50px;
+    background: #e6f7ff;
+    color: var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    margin-right: 20px;
+    flex-shrink: 0;
+}
+
+.contact-item h4 {
+    margin: 0 0 5px 0;
+    color: var(--primary);
+    font-size: 1.1rem;
+}
+
+.contact-item p {
+    margin: 0;
+    color: #666;
+    font-size: 0.95rem;
+}
+
+.map-container {
+    flex: 1.5;
+    min-width: 300px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    min-height: 400px;
+}
+
+/* =========================================
+   8. FOOTER
+   ========================================= */
+footer {
+    background: #333;
+    color: #aaa;
+    text-align: center;
+    padding: 40px 20px;
+    font-size: 0.9rem;
+    margin-top: 50px;
+}
+
+/* =========================================
+   9. MEDIA QUERIES
+   ========================================= */
+/* บังคับขนาด Slide ในจอคอม (33.33% เพื่อ Center Mode)
+@media (min-width: 1024px) {
+    .swiper-slide {
+        width: 33.33% !important;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+} */
