@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - จัดการฐานข้อมูล</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+
+<body>
+
+    <nav class="top-navbar">
+        <div class="brand"><i class="fa-solid fa-user-shield"></i> Admin Panel</div>
+        <div class="top-menu">
+            <div class="top-item active" onclick="switchCategory('data', this)"><i class="fa-solid fa-database"></i>
+                จัดการข้อมูล (Data)</div>
+            <div class="top-item" onclick="switchCategory('tools', this)"><i class="fa-solid fa-calendar-days"></i>
+                จัดการตารางเวร</div>
+
+            <div class="top-item" id="navSystem" onclick="switchCategory('system', this)"><i
+                    class="fa-solid fa-gear"></i> ระบบ (System)</div>
+        </div>
+
+        <div class="user-profile" style="display: flex; gap: 15px; align-items: center;">
+            <div style="text-align: right; line-height: 1.2;">
+                <div id="displayUserName" style="font-weight: bold; font-size: 0.95rem;">กำลังโหลด...</div>
+                <div id="displayUserRole" style="font-size: 0.75rem; color: #ffeb3b;"></div>
+            </div>
+            <button onclick="logout()" class="btn-home"
+                style="background: #dc3545; color: white; border: none; cursor: pointer; padding: 8px 15px;"><i
+                    class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ</button>
+        </div>
+    </nav>
+
+    <div class="layout-container">
+        <div class="sidebar" id="sidebarMenu"></div>
+        <div class="main-content">
+
+            <div id="tableView" class="section-view active">
+                <div class="header">
+                    <h1 id="pageTitle">จัดการข้อมูล</h1>
+                    <div class="action-bar">
+                        <button id="btnBulkDel" class="btn btn-bulk-del" onclick="deleteBulk()"><i
+                                class="fa-solid fa-trash-can"></i> ลบที่เลือก (<span
+                                id="selectedCount">0</span>)</button>
+                        <button class="btn btn-add" onclick="openModal('add')"><i class="fa-solid fa-plus"></i>
+                            เพิ่มข้อมูล</button>
+                    </div>
+                </div>
+
+                <div id="tableFilterBar" class="filter-bar" style="display:none;">
+                    <div class="filter-group">
+                        <label class="filter-label"><i class="fa-solid fa-magnifying-glass"></i> ค้นหา
+                            (ชื่อ/แผนก)</label>
+                        <input type="text" id="searchInput" class="filter-input" placeholder="พิมพ์คำค้นหา..."
+                            onkeyup="applyFilters()">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label"><i class="fa-solid fa-hospital"></i> กรองตามแผนก</label>
+                        <select id="filterDept" class="filter-input" onchange="applyFilters()">
+                            <option value="">-- ทุกแผนก --</option>
+                        </select>
+                    </div>
+                    <div class="filter-group" id="filterSpecGroup">
+                        <label class="filter-label"><i class="fa-solid fa-star"></i> กรองตามความเชี่ยวชาญ</label>
+                        <select id="filterSpec" class="filter-input" onchange="applyFilters()">
+                            <option value="">-- ทุกความเชี่ยวชาญ --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead id="tableHead"></thead>
+                        <tbody id="tableBody">
+                            <tr>
+                                <td colspan="10" align="center">โหลด...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="scheduleManagerView" class="section-view">
+                <div class="header">
+                    <h1><i class="fa-solid fa-calendar-check"></i> จัดการตารางเวรแพทย์</h1>
+                    <div class="action-bar">
+                        <button class="btn btn-add" onclick="autoAssignSchedules()"
+                            style="margin-right: 15px; background: #007bff; box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> จัดเวรอัตโนมัติ
+                        </button>
+                        <button class="btn btn-edit" onclick="clearAllSchedules()"
+                            style="margin-right: 10px; color: #fff; background: #fd7e14; border: none; font-size: 0.9rem; padding: 8px 16px;">
+                            <i class="fa-solid fa-user-xmark"></i> ล้างเฉพาะเวรแพทย์
+                        </button>
+                        <button class="btn btn-del" onclick="clearAllOpdSchedules()" style="margin-right: 15px;">
+                            <i class="fa-solid fa-building-circle-xmark"></i> ปิดทุกแผนก (ล้างทั้งหมด)
+                        </button>
+
+                        <div class="view-switcher">
+                            <button class="view-btn active" onclick="switchScheduleMode('grid', this)"><i
+                                    class="fa-solid fa-table-cells"></i> มุมมองตาราง (Grid)</button>
+                            <button class="view-btn" onclick="switchScheduleMode('list', this)"><i
+                                    class="fa-solid fa-list"></i> มุมมองรายการ (List)</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="scheduleGridContainer" class="schedule-sub-view active">
+                    <div class="filter-bar" style="margin-bottom: 20px;">
+                        <div class="filter-group" style="max-width: 300px;">
+                            <label class="filter-label"><i class="fa-solid fa-hospital"></i> เลือกแผนกที่จะดู</label>
+                            <select id="schedFilterDept" class="filter-input" onchange="loadScheduleManager()">
+                                <option value="">-- แสดงทุกแผนก --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid-editor-container">
+                        <table class="grid-table">
+                            <thead>
+                                <tr>
+                                    <th>แผนก / วัน</th>
+                                    <th>จันทร์</th>
+                                    <th>อังคาร</th>
+                                    <th>พุธ</th>
+                                    <th>พฤหัส</th>
+                                    <th>ศุกร์</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gridBody">
+                                <tr>
+                                    <td colspan="6" style="padding:50px;">⏳ กำลังโหลดตาราง...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="scheduleListContainer" class="schedule-sub-view">
+                    <div class="filter-bar" style="margin-bottom: 20px;">
+                        <div class="filter-group">
+                            <label class="filter-label"><i class="fa-regular fa-calendar"></i> เลือกวัน</label>
+                            <select id="listFilterDay" class="filter-input" onchange="loadScheduleList()">
+                                <option value="">-- แสดงทุกวัน --</option>
+                                <option value="จันทร์">จันทร์</option>
+                                <option value="อังคาร">อังคาร</option>
+                                <option value="พุธ">พุธ</option>
+                                <option value="พฤหัส">พฤหัส</option>
+                                <option value="ศุกร์">ศุกร์</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label"><i class="fa-solid fa-hospital-user"></i> เลือกแผนก</label>
+                            <select id="listFilterDept" class="filter-input" onchange="loadScheduleList()">
+                                <option value="">-- ทุกแผนก --</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label"><i class="fa-solid fa-magnifying-glass"></i>
+                                ค้นหาชื่อแพทย์</label>
+                            <input type="text" id="listSearchDoc" class="filter-input" placeholder="พิมพ์ชื่อแพทย์..."
+                                onkeyup="loadScheduleList()">
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>แพทย์</th>
+                                    <th>แผนก</th>
+                                    <th>วัน</th>
+                                    <th>กะเวลา</th>
+                                    <th>จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="schedListBody">
+                                <tr>
+                                    <td colspan="5" align="center">กำลังโหลด...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="importView" class="section-view">
+                <div class="header">
+                    <h1><i class="fa-solid fa-cloud-arrow-up"></i> นำเข้าข้อมูล (Import)</h1>
+                </div>
+                <div class="instruction-card">
+                    <h3><i class="fa-solid fa-circle-info"></i> คำแนะนำการเตรียมไฟล์ JSON</h3>
+                    <ul id="formatGuide"></ul>
+                    <div style="font-size:0.8rem; color:#888; margin-top:10px; padding-left:20px;">* ID
+                        จะถูกสร้างให้อัตโนมัติหากไม่ระบุในไฟล์</div>
+                </div>
+                <div class="import-card">
+                    <div style="text-align:center; margin-bottom:15px;">
+                        <label
+                            style="font-weight: bold; display: block; margin-bottom: 5px;">เลือกตารางที่ต้องการนำเข้า:</label>
+                        <select id="importCollection" onchange="updateInstruction()"
+                            style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc; font-size:1rem; margin-bottom:15px;">
+
+                            <option value="users">บัญชีผู้ใช้ (Users)</option>
+
+                            <option value="doctors">แพทย์ (Doctors)</option>
+                            <option value="departments">แผนก (Departments)</option>
+                            <option value="locations">ห้อง/สถานที่ (Locations)</option>
+                            <option value="specialties">ความเชี่ยวชาญ (Specialties)</option>
+                            <option value="positions">ตำแหน่ง (Positions)</option>
+                            <option value="prefixes_th">คำนำหน้าชื่อ (TH)</option>
+                            <option value="prefixes_en">คำนำหน้าชื่อ (EN)</option>
+                        </select>
+                    </div>
+                    <div class="import-options">
+                        <div class="import-box" onclick="document.getElementById('fileInput').click()"><i
+                                class="fa-solid fa-file"></i><br>อัปโหลดไฟล์ JSON<input type="file" id="fileInput"
+                                accept=".json" style="display:none;" onchange="handleFile(this)"></div>
+                        <div class="import-box"><i class="fa-solid fa-code"></i><br><textarea id="jsonText"
+                                placeholder="หรือ วางโค้ด JSON ที่นี่"
+                                style="width:100%; border:none; outline:none; text-align:center; resize:none; font-family: monospace;"></textarea>
+                        </div>
+                    </div>
+                    <button class="btn btn-add"
+                        style="width:100%; margin-top:20px; justify-content:center; font-size: 1rem; padding: 12px;"
+                        onclick="processImport()">เริ่มนำเข้าข้อมูล</button>
+                    <div id="importLog"
+                        style="margin-top:15px; font-size:0.9rem; text-align: center; font-weight: bold;"></div>
+                </div>
+            </div>
+
+            <div id="dashboardView" class="section-view">
+                <div class="dashboard-welcome">
+                    <div>
+                        <h2 id="welcomeName">ยินดีต้อนรับ, แอดมิน</h2>
+                        <p>นี่คือข้อมูลภาพรวมของระบบ HOSPITAL CARE ในขณะนี้</p>
+                    </div>
+                    <div class="welcome-icon">
+                        <i class="fa-solid fa-hospital"></i>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="stat-card" style="border-left-color: #0066cc;">
+                        <div class="stat-icon" style="color: #0066cc; background: #e6f7ff;"><i
+                                class="fa-solid fa-user-doctor"></i></div>
+                        <div class="stat-info">
+                            <h3>แพทย์ทั้งหมด (ท่าน)</h3>
+                            <p class="num" id="statDoctors">...</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card" style="border-left-color: #28a745;">
+                        <div class="stat-icon" style="color: #28a745; background: #e8f5e9;"><i
+                                class="fa-solid fa-hospital-user"></i></div>
+                        <div class="stat-info">
+                            <h3>แผนกที่เปิด (แผนก)</h3>
+                            <p class="num" id="statDepts">...</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card" style="border-left-color: #ffc107;">
+                        <div class="stat-icon" style="color: #ff9800; background: #fff8e1;"><i
+                                class="fa-solid fa-calendar-check"></i></div>
+                        <div class="stat-info">
+                            <h3>เวรตรวจทั้งหมด (กะ)</h3>
+                            <p class="num" id="statSchedules">...</p>
+                        </div>
+                    </div>
+
+                    <div id="statUsersCard" class="stat-card" style="border-left-color: #17a2b8;">
+                        <div class="stat-icon" style="color: #17a2b8; background: #e0f7fa;"><i
+                                class="fa-solid fa-users-gear"></i></div>
+                        <div class="stat-info">
+                            <h3>บัญชีผู้ใช้ระบบ (คน)</h3>
+                            <p class="num" id="statUsers">...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="auditLogsView" class="section-view">
+                <div class="header">
+                    <h1 id="logPageTitle"><i class="fa-solid fa-clock-rotate-left"></i> ประวัติการทำงาน</h1>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 180px;">วัน-เวลา</th>
+                                <th style="width: 200px;">ผู้กระทำ (Role)</th>
+                                <th style="width: 150px;">การกระทำ</th>
+                                <th>รายละเอียด</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsBody">
+                            <tr>
+                                <td colspan="4" align="center">กำลังโหลด...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dataModal" class="modal">
+        <div class="modal-content">
+            <span style="float:right; cursor:pointer; font-size:1.5rem;" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">ข้อมูล</h2>
+            <form id="dataForm">
+                <div id="formFields"></div>
+                <div style="text-align:right; margin-top:20px;"><button type="submit"
+                        class="btn btn-add">บันทึก</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div id="assignModal" class="modal">
+        <div class="modal-content" style="width: 450px;">
+            <span style="float:right; cursor:pointer; font-size:1.5rem;" onclick="closeAssignModal()">&times;</span>
+            <h3 id="assignModalTitle" style="color:var(--primary);"><i class="fa-solid fa-user-plus"></i> เพิ่มแพทย์ลงกะ
+            </h3>
+            <div
+                style="background: #f8f9fa; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 0.9rem;">
+                <div id="assignTargetInfo" style="color:#555;"></div>
+            </div>
+
+            <div class="form-group">
+                <label>เลือกแพทย์ (ในแผนก):</label>
+                <select id="assignDocSelect"
+                    style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc; font-size:1rem;">
+                    <option value="">กำลังโหลดรายชื่อ...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>สถานที่ปฏิบัติงาน:</label>
+                <select id="assignLocation"
+                    style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc; font-size:1rem;">
+                    <option value="">กำลังโหลดสถานที่...</option>
+                </select>
+            </div>
+
+            <div style="text-align:right; margin-top:20px; display:flex; gap:10px; justify-content: flex-end;">
+                <button class="btn btn-del" onclick="closeAssignModal()" style="background:#6c757d;">ยกเลิก</button>
+                <button class="btn btn-add" onclick="confirmAssignment()">บันทึกข้อมูล</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="openShiftModal" class="modal">
+        <div class="modal-content" style="width: 400px;">
+            <span style="float:right; cursor:pointer; font-size:1.5rem;" onclick="closeOpenShiftModal()">&times;</span>
+            <h3 style="color:var(--primary);"><i class="fa-solid fa-door-open"></i> เปิดห้องตรวจ</h3>
+            <div
+                style="background: #eef7ff; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 0.9rem; color:#0066cc;">
+                <span id="openShiftInfo"></span>
+            </div>
+
+            <div class="form-group">
+                <label>เลือกห้อง/สถานที่ปฏิบัติงาน:</label>
+                <select id="openShiftLocation"
+                    style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc; font-size:1rem;">
+                    <option value="">กำลังโหลดรายชื่อห้อง...</option>
+                </select>
+            </div>
+
+            <div style="text-align:right; margin-top:20px; display:flex; gap:10px; justify-content: flex-end;">
+                <button class="btn btn-del" onclick="closeOpenShiftModal()" style="background:#6c757d;">ยกเลิก</button>
+                <button class="btn btn-add" onclick="confirmOpenShift()">ยืนยันเปิดกะ</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">สำเร็จ!</div>
+
+
+
+    <script type="module" src="js/admin/admin.js"></script>
+</body>
+
+</html>
