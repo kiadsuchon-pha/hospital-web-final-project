@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ตารางแพทย์ออกตรวจ (รายบุคคล) - HOSPITAL CARE</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+
+        :root {
+            --primary: #0066cc;
+            --secondary: #00cc99;
+            --text-dark: #333;
+            --white: #ffffff;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Sarabun', sans-serif;
+            background: #f4f6f9;
+            color: var(--text-dark);
+        }
+
+        nav {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #0066cc;
+        }
+
+        .nav-links a {
+            color: #333;
+            text-decoration: none;
+            margin-left: 30px;
+            font-weight: 500;
+            transition: 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #0066cc;
+        }
+
+        .page-container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        .header-section {
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-text h1 {
+            color: #0066cc;
+            margin: 0 0 5px 0;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-text p {
+            color: #666;
+            margin: 0;
+        }
+
+        .btn-opd {
+            text-decoration: none;
+            background: white;
+            color: #0066cc;
+            border: 2px solid #0066cc;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: bold;
+            transition: 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-opd:hover {
+            background: #0066cc;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 102, 204, 0.2);
+        }
+
+        .filter-box {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-item {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-item label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        .filter-item select,
+        .filter-item input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: 'Sarabun', sans-serif;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
+
+        .schedule-table th {
+            background: #0066cc;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .schedule-table td {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            color: #444;
+        }
+
+        .schedule-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .schedule-table tr:hover {
+            background-color: #f9fbff;
+        }
+
+        .dept-badge {
+            background: #eef7ff;
+            color: #0066cc;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .doc-name {
+            font-weight: bold;
+            color: #0066cc;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+
+        .doc-name:hover {
+            color: #004a99;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <div class="container">
+            <div class="logo"><i class="fa-solid fa-heart-pulse"></i> HOSPITAL CARE</div>
+            <div class="nav-links">
+                <a href="index.html">หน้าหลัก</a>
+                <a href="index.html#services">บริการ</a>
+                <a href="doctors.html">ค้นหาแพทย์</a>
+                <a href="opd-schedule.html">ตารางเวร</a>
+                <a href="index.html#contact">ติดต่อ</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page-container">
+        <div class="header-section">
+            <div class="header-text">
+                <h1><i class="fa-solid fa-calendar-user"></i> ตารางแพทย์ออกตรวจ (รายบุคคล)</h1>
+                <p>ค้นหาและตรวจสอบเวลาออกตรวจของแพทย์เฉพาะทาง</p>
+            </div>
+            <a href="opd-schedule.html" class="btn-opd"><i class="fa-solid fa-calendar-days"></i> ดูตารางรวม (OPD)</a>
+        </div>
+
+        <div class="filter-box">
+            <div class="filter-item">
+                <label><i class="fa-regular fa-calendar"></i> เลือกวัน</label>
+                <select id="dayFilter" onchange="filterSchedule()">
+                    <option value="">-- แสดงทุกวัน --</option>
+                    <option value="จันทร์">วันจันทร์</option>
+                    <option value="อังคาร">วันอังคาร</option>
+                    <option value="พุธ">วันพุธ</option>
+                    <option value="พฤหัส">วันพฤหัสบดี</option>
+                    <option value="ศุกร์">วันศุกร์</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label><i class="fa-solid fa-hospital-user"></i> เลือกแผนก</label>
+                <select id="deptFilter" onchange="filterSchedule()">
+                    <option value="">-- ทุกแผนก --</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label><i class="fa-solid fa-magnifying-glass"></i> ค้นหาชื่อแพทย์</label>
+                <input type="text" id="nameSearch" placeholder="พิมพ์ชื่อแพทย์..." onkeyup="filterSchedule()">
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th width="10%">วัน</th>
+                        <th width="20%">เวลา</th>
+                        <th width="25%">แพทย์</th>
+                        <th width="20%">แผนกที่ลงตรวจ</th>
+                        <th width="25%">สถานที่</th>
+                    </tr>
+                </thead>
+                <tbody id="scheduleBody">
+                    <tr>
+                        <td colspan="5" style="text-align:center; padding:30px;">⏳ กำลังโหลดข้อมูล...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script type="module">
+        import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { db } from "./js/firebase-config.js";
+
+        let allSchedules = [];
+        const SHIFTS = { '1': '08:00 - 12:00', '2': '13:00 - 16:00' };
+
+        window.onload = async function () { await loadData(); };
+
+        async function loadData() {
+            try {
+                const [schSnap, docSnap, deptSnap, locSnap] = await Promise.all([
+                    getDocs(collection(db, "doctor_schedules")),
+                    getDocs(collection(db, "doctors")),
+                    getDocs(collection(db, "departments")),
+                    getDocs(collection(db, "locations"))
+                ]);
+
+                const docMap = {}; docSnap.forEach(d => docMap[d.id] = d.data());
+                const locMap = {}; locSnap.forEach(d => locMap[d.id] = d.data().name);
+                const deptMap = {}; const deptFilter = document.getElementById('deptFilter');
+
+                deptSnap.forEach(d => {
+                    const data = d.data();
+                    deptMap[d.id] = data.name;
+                    deptFilter.innerHTML += `<option value="${data.name}">${data.name}</option>`;
+                });
+
+                allSchedules = [];
+                schSnap.forEach(s => {
+                    const sch = s.data();
+                    const doctor = docMap[sch.doc_id];
+
+                    if (doctor) {
+                        let fullName = doctor.name;
+                        if (!fullName || fullName === 'undefined') fullName = `${doctor.pname || ''}${doctor.fname || ''} ${doctor.lname || ''}`.trim();
+                        const timeStr = SHIFTS[sch.shift] || sch.shift || '-';
+                        const locName = locMap[sch.location_id] || "-";
+
+                        allSchedules.push({
+                            day: sch.day,
+                            time: timeStr,
+                            docName: fullName,
+                            // 🌟 ตรงนี้สำคัญ: ดึงชื่อแผนกจากตารางเวร (sch.dept_id) แทนที่จะเป็นหมอคนเดียว
+                            deptName: deptMap[sch.dept_id] || "-",
+                            location: locName
+                        });
+                    }
+                });
+
+                renderTable(allSchedules);
+            } catch (error) {
+                console.error("Error:", error);
+                document.getElementById('scheduleBody').innerHTML = `<tr><td colspan="5" style="color:red; text-align:center;">โหลดข้อมูลไม่สำเร็จ</td></tr>`;
+            }
+        }
+
+        window.renderTable = function (data) {
+            const tbody = document.getElementById('scheduleBody');
+            if (data.length === 0) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px; color:#999;">ไม่พบข้อมูลตารางเวรตามเงื่อนไข</td></tr>`; return; }
+
+            const dayOrder = { "จันทร์": 1, "อังคาร": 2, "พุธ": 3, "พฤหัส": 4, "ศุกร์": 5 };
+            data.sort((a, b) => (dayOrder[a.day] || 99) - (dayOrder[b.day] || 99));
+
+            let html = "";
+            data.forEach(item => {
+                html += `<tr>
+                    <td style="font-weight:bold; color:#555;">${item.day}</td>
+                    <td style="color:#0066cc;">${item.time}</td>
+                    <td><a href="#" class="doc-name">${item.docName}</a></td>
+                    <td><span class="dept-badge">${item.deptName}</span></td>
+                    <td>${item.location}</td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+        }
+
+        window.filterSchedule = function () {
+            const dayVal = document.getElementById('dayFilter').value;
+            const deptVal = document.getElementById('deptFilter').value;
+            const nameVal = document.getElementById('nameSearch').value.toLowerCase();
+
+            const filtered = allSchedules.filter(item => {
+                const matchDay = dayVal === "" || item.day === dayVal;
+                const matchDept = deptVal === "" || item.deptName === deptVal;
+                const matchName = item.docName.toLowerCase().includes(nameVal);
+                return matchDay && matchDept && matchName;
+            });
+            renderTable(filtered);
+        }
+    </script>
+</body>
+
+</html>

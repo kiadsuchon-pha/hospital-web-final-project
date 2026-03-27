@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รายชื่อแพทย์ - HOSPITAL CARE</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/doctors.css">
+
+</head>
+
+<body>
+
+    <nav>
+        <div class="container">
+            <div class="logo"><i class="fa-solid fa-heart-pulse"></i> HOSPITAL CARE</div>
+            <div class="nav-links">
+                <a href="index.html">หน้าหลัก</a>
+                <a href="index.html#about">เกี่ยวกับเรา</a>
+                <a href="index.html#services">บริการ</a>
+                <a href="doctors.html" style="color: var(--primary); font-weight: bold;">ค้นหาแพทย์</a>
+                <a href="opd-schedule.html">ตารางเวร</a>
+                <a href="index.html#contact">ติดต่อ</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page-container" style="margin-top: 80px;">
+        
+        <div class="search-area">
+            <div class="search-header">
+                <h1><i class="fa-solid fa-user-doctor"></i> ค้นหาแพทย์ผู้เชี่ยวชาญ</h1>
+                <p style="color:#666;">เลือกแผนกหรือพิมพ์ชื่อแพทย์เพื่อค้นหา</p>
+            </div>
+            
+            <div class="search-inputs">
+                <select id="deptSelect" class="custom-select" onchange="filterDoctors()">
+                    <option value="all">-- ทุกแผนก --</option>
+                </select>
+
+                <input type="text" id="nameInput" class="custom-input" 
+                       placeholder="พิมพ์ชื่อแพทย์ หรือคำค้นหา..." 
+                       onkeyup="filterDoctors()">
+            </div>
+        </div>
+
+        <div class="doctors-grid" id="doctorList">
+            <div style="width:100%; text-align:center; padding: 40px;">
+                <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; color: #ccc;"></i>
+                <h3 style="color:#888; margin-top: 15px;">กำลังโหลดข้อมูลแพทย์...</h3>
+            </div>
+        </div>
+
+        <div id="noResult" style="text-align: center; display: none; margin-top: 50px; color: #888;">
+            <i class="fa-regular fa-folder-open" style="font-size: 3rem; margin-bottom: 15px; color:#ccc;"></i>
+            <h3>ไม่พบข้อมูลแพทย์ตามเงื่อนไข</h3>
+        </div>
+    </div>
+
+    <script type="module">
+        import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { db } from "./js/firebase-config.js";
+
+        window.onload = async function () {
+            await loadAllData();
+        }
+
+        async function loadAllData() {
+            const listContainer = document.getElementById('doctorList');
+            const deptSelect = document.getElementById('deptSelect');
+
+            try {
+                const [docSnap, deptSnap] = await Promise.all([
+                    getDocs(collection(db, "doctors")),
+                    getDocs(collection(db, "departments"))
+                ]);
+
+                const deptMap = {};
+                deptSnap.forEach(d => {
+                    const data = d.data();
+                    if (data.is_active !== false) {
+                        deptMap[d.id] = data.name;
+                        const option = document.createElement('option');
+                        option.value = data.name; 
+                        option.textContent = data.name;
+                        deptSelect.appendChild(option);
+                    }
+                });
+
+                let html = "";
+                docSnap.forEach(doc => {
+                    const data = doc.data();
+                    
+                    // 🌟 สร้าง Tag แผนกหลายๆ อัน
+                    let deptArr = Array.isArray(data.dept_id) ? data.dept_id : (data.dept_id ? [data.dept_id] : []);
+                    let deptNames = deptArr.map(id => deptMap[id] || "ไม่ระบุแผนก");
+                    let deptSearchText = deptNames.join(" "); // ไว้ค้นหา
+                    let deptHtml = deptNames.map(name => `<div class="dept-badge" style="background: #e6f7ff; color: #0066cc; padding: 4px 12px; border-radius: 20px; display: inline-block; font-size: 0.8rem; margin-bottom: 5px; margin-right: 5px; font-weight: 600;">${name}</div>`).join('');
+
+                    let fullName = data.name || `${data.pname || ''} ${data.fname || ''} ${data.lname || ''}`.trim();
+                    let imageHtml = data.profile_image 
+                        ? `<img src="${data.profile_image}" alt="${fullName}" style="width: 100%; height: 100%; object-fit: cover;">` 
+                        : `<i class="fa-solid fa-user-doctor" style="font-size: 4rem; color: #aaccff; margin-top: 30px;"></i>`;
+
+                    html += `
+                        <div class="doctor-card" data-name="${fullName}" data-dept="${deptSearchText}">
+                            <div class="doctor-img" style="width: 150px; height: 150px; background: #eef7ff; border-radius: 50%; margin: 0 auto 15px; overflow: hidden; display: block; text-align: center;">
+                                ${imageHtml}
+                            </div>
+                            <h3 style="margin-bottom: 10px; color: #333;">${fullName}</h3>
+                            <div style="margin-bottom: 15px;">${deptHtml || '<div class="dept-badge">-</div>'}</div>
+                            
+                            <div style="padding: 0 20px 20px 20px;">
+                                <a href="doctor-detail.html?id=${doc.id}" class="btn-book" style="display: block; text-decoration: none; padding: 10px; background: var(--primary); color: white; border-radius: 8px; font-weight: 600;">
+                                    <i class="fa-solid fa-circle-info"></i> ดูข้อมูลแพทย์
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                if (html) {
+                    listContainer.innerHTML = html;
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const deptParam = urlParams.get('dept');
+                    if (deptParam) {
+                        deptSelect.value = deptParam;
+                        filterDoctors();
+                    }
+                } else {
+                    listContainer.innerHTML = "<h3 style='width:100%; text-align:center; color:#888;'>ไม่พบข้อมูลแพทย์ในระบบ</h3>";
+                }
+
+            } catch (error) {
+                console.error("Error:", error);
+                listContainer.innerHTML = `<p style="color:red; text-align:center;">โหลดข้อมูลไม่สำเร็จ: ${error.message}</p>`;
+            }
+        }
+
+        window.filterDoctors = function () {
+            const selectedDept = document.getElementById("deptSelect").value.toUpperCase();
+            const searchName = document.getElementById("nameInput").value.toUpperCase();
+            
+            const cards = document.getElementsByClassName("doctor-card");
+            let hasResult = false;
+
+            for (let card of cards) {
+                const name = card.getAttribute("data-name").toUpperCase();
+                const deptText = card.getAttribute("data-dept").toUpperCase();
+
+                const matchDept = (selectedDept === "ALL") || deptText.includes(selectedDept);
+                const matchName = (searchName === "") || name.includes(searchName) || deptText.includes(searchName);
+
+                if (matchDept && matchName) {
+                    card.style.display = "";
+                    hasResult = true;
+                } else {
+                    card.style.display = "none";
+                }
+            }
+
+            document.getElementById("noResult").style.display = hasResult ? "none" : "block";
+        };
+    </script>
+</body>
+
+</html>

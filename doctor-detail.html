@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ข้อมูลแพทย์ - HOSPITAL CARE</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        html { scroll-behavior: smooth; }
+        body { background: #f9fbfd; }
+        .detail-container { max-width: 1000px; margin: 10px auto 50px auto; padding: 0 20px; display: flex; gap: 40px; flex-wrap: wrap; }
+        .profile-sidebar { flex: 1; min-width: 300px; background: white; border-radius: 20px; padding: 40px 20px; text-align: center; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); height: fit-content; }
+        .profile-img-box { width: 180px; height: 180px; background: #eef7ff; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 5px solid white; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); }
+        .profile-img-box img { width: 100%; height: 100%; object-fit: cover; }
+        .profile-img-box i { font-size: 80px; color: #aaccff; }
+        .dept-tag { background: #e6f7ff; color: #0066cc; padding: 6px 15px; border-radius: 30px; font-weight: 600; display: inline-block; margin-bottom: 5px; font-size: 0.9rem; border: 1px solid #b3e0ff;}
+        .info-content { flex: 2; min-width: 350px; background: white; border-radius: 20px; padding: 40px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); }
+        .section-title { font-size: 1.2rem; font-weight: bold; color: #333; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; }
+        .section-title i { color: #0066cc; }
+        .info-list { list-style: none; padding: 0; margin-bottom: 30px; }
+        .info-list li { margin-bottom: 10px; color: #555; position: relative; padding-left: 20px; line-height: 1.6; }
+        .info-list li::before { content: "•"; color: #00cc99; font-weight: bold; position: absolute; left: 0; }
+        .schedule-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .schedule-table th, .schedule-table td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; vertical-align: top; }
+        .schedule-table th { background: #f8f9fa; color: #666; font-weight: 600; width: 40%; }
+        .back-btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: #666; margin-bottom: 20px; font-weight: 600; }
+        .back-btn:hover { color: #0066cc; }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <div class="container">
+            <div class="logo"><i class="fa-solid fa-heart-pulse"></i> HOSPITAL CARE</div>
+            <div class="nav-links">
+                <a href="index.html">หน้าหลัก</a>
+                <a href="doctors.html" style="color: var(--primary); font-weight: bold;">ค้นหาแพทย์</a>
+                <a href="opd-schedule.html">ตารางเวร</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="margin-top: 100px;">
+        <a href="doctors.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i> ย้อนกลับไปหน้ารายชื่อแพทย์</a>
+    </div>
+
+    <div class="detail-container" id="contentArea">
+        <div style="width:100%; text-align:center; padding:50px;">
+            <i class="fa-solid fa-circle-notch fa-spin" style="font-size:3rem; color:#ccc;"></i>
+            <p style="color:#666; margin-top:20px;">กำลังโหลดข้อมูลแพทย์...</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { db } from "./js/firebase-config.js";
+
+        window.onload = async function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const docId = urlParams.get('id');
+
+            if (!docId) {
+                document.getElementById('contentArea').innerHTML = `<h3 style="text-align:center; color:red;">ไม่พบรหัสแพทย์ (ID)</h3>`;
+                return;
+            }
+
+            try {
+                const docRef = doc(db, "doctors", docId);
+                const docSnap = await getDoc(docRef);
+
+                if (!docSnap.exists()) {
+                    document.getElementById('contentArea').innerHTML = `<h3 style="text-align:center;">ไม่พบข้อมูลแพทย์ท่านนี้ในระบบ</h3>`;
+                    return;
+                }
+
+                const doctor = docSnap.data();
+                const nameTH = `${doctor.pname || ''} ${doctor.fname || ''} ${doctor.lname || ''}`.trim();
+                const nameEN = `${doctor.pname_en || ''} ${doctor.fname_en || ''} ${doctor.lname_en || ''}`.trim();
+
+                // 🌟 ดึงชื่อแผนกหลายๆ อัน (Promise.all)
+                let deptArr = Array.isArray(doctor.dept_id) ? doctor.dept_id : (doctor.dept_id ? [doctor.dept_id] : []);
+                let deptHtml = '';
+                if (deptArr.length > 0) {
+                    const deptPromises = deptArr.map(id => getDoc(doc(db, "departments", id)));
+                    const deptSnaps = await Promise.all(deptPromises);
+                    deptHtml = deptSnaps.filter(s => s.exists()).map(s => `<span class="dept-tag">${s.data().name}</span>`).join(' ');
+                } else {
+                    deptHtml = `<span class="dept-tag">ไม่ระบุแผนก</span>`;
+                }
+
+                let specialtyHtml = '<li>-</li>';
+                if (doctor.specialties && Array.isArray(doctor.specialties) && doctor.specialties.length > 0) {
+                    const specPromises = doctor.specialties.map(id => getDoc(doc(db, "specialties", id)));
+                    const specSnaps = await Promise.all(specPromises);
+                    const specNames = specSnaps.filter(s => s.exists()).map(s => s.data().name);
+                    if (specNames.length > 0) specialtyHtml = specNames.map(name => `<li>${name}</li>`).join('');
+                }
+
+                let scheduleHtml = `<tr><td colspan="2" style="color:#999; text-align:center;">- ไม่พบตารางออกตรวจ -</td></tr>`;
+                const q = query(collection(db, "doctor_schedules"), where("doc_id", "==", docId));
+                const schedSnap = await getDocs(q);
+
+                if (!schedSnap.empty) {
+                    const locSnap = await getDocs(collection(db, "locations"));
+                    const locMap = {}; locSnap.forEach(d => { locMap[d.id] = d.data().name; });
+                    const SHIFTS = { '1': '08:00 - 12:00 (กะเช้า)', '2': '13:00 - 16:00 (กะบ่าย)' };
+
+                    let schedList = [];
+                    schedSnap.forEach(s => {
+                        const data = s.data();
+                        schedList.push({ day: data.day, shiftLabel: SHIFTS[data.shift] || data.shift, room: locMap[data.location_id] || 'ไม่ระบุห้อง' });
+                    });
+
+                    const dayOrder = { "จันทร์": 1, "อังคาร": 2, "พุธ": 3, "พฤหัส": 4, "ศุกร์": 5, "เสาร์": 6, "อาทิตย์": 7 };
+                    schedList.sort((a, b) => (dayOrder[a.day] || 99) - (dayOrder[b.day] || 99));
+
+                    scheduleHtml = schedList.map(s => `
+                        <tr>
+                            <td style="font-weight: 600;"><i class="fa-regular fa-calendar" style="color:#0066cc; margin-right:5px;"></i> วัน${s.day}</td>
+                            <td><div>${s.shiftLabel}</div><div style="font-size:0.85rem; color:#888; margin-top:3px;"><i class="fa-solid fa-location-dot"></i> ${s.room}</div></td>
+                        </tr>
+                    `).join('');
+                }
+
+                const container = document.getElementById('contentArea');
+                container.innerHTML = `
+                    <div class="profile-sidebar">
+                        <div class="profile-img-box">
+                            ${doctor.profile_image ? `<img src="${doctor.profile_image}" alt="${nameTH}">` : `<i class="fa-solid fa-user-doctor"></i>`}
+                        </div>
+                        <div style="display:flex; gap:5px; justify-content:center; flex-wrap:wrap; margin-bottom:15px;">${deptHtml}</div>
+                        <h2 style="margin: 10px 0 0 0; color: #333;">${nameTH}</h2>
+                        ${nameEN ? `<h3 style="margin: 5px 0 15px 0; color: #777; font-weight: 400; font-size: 1.1rem;">${nameEN}</h3>` : ''}
+                        <p style="color: #777; background: #f8f9fa; padding: 10px; border-radius: 8px;">เลขที่ใบอนุญาต: <strong>${doctor.license_id || '-'}</strong></p>
+                    </div>
+
+                    <div class="info-content">
+                        <h1 style="margin-top:0; color:#0066cc;">ข้อมูลแพทย์</h1>
+                        
+                        <div class="section-title"><i class="fa-solid fa-graduation-cap"></i> ประวัติการศึกษา</div>
+                        <ul class="info-list">${doctor.edu && Array.isArray(doctor.edu) && doctor.edu.length > 0 ? doctor.edu.map(e => `<li>${e}</li>`).join('') : '<li>-</li>'}</ul>
+
+                        <div class="section-title"><i class="fa-solid fa-star"></i> ความเชี่ยวชาญเฉพาะทาง</div>
+                        <ul class="info-list">${specialtyHtml}</ul>
+
+                        <div class="section-title"><i class="fa-solid fa-book-open"></i> บทความวิจัย / ผลงานวิชาการ</div>
+                        <ul class="info-list">${doctor.research && Array.isArray(doctor.research) && doctor.research.length > 0 ? doctor.research.map(r => `<li>${r}</li>`).join('') : '<li>-</li>'}</ul>
+
+                        <div class="section-title"><i class="fa-solid fa-calendar-days"></i> ตารางออกตรวจ</div>
+                        <table class="schedule-table">${scheduleHtml}</table>
+                    </div>
+                `;
+
+            } catch (error) {
+                console.error("Error:", error);
+                document.getElementById('contentArea').innerHTML = `<p style="color:red; text-align:center;">เกิดข้อผิดพลาดในการโหลดข้อมูล: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+
+</html>

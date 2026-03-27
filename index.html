@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HOSPITAL CARE - หน้าหลัก</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+
+    <link rel="stylesheet" href="css/style.css">
+
+</head>
+
+<body>
+
+    <nav>
+        <div class="container">
+            <div class="logo"><i class="fa-solid fa-heart-pulse"></i> HOSPITAL CARE</div>
+            <div class="nav-links">
+                <a href="#home">หน้าหลัก</a>
+                <a href="#about">เกี่ยวกับเรา</a>
+                <a href="#services">บริการ</a>
+                <a href="doctors.html">ค้นหาแพทย์</a>
+                <a href="opd-schedule.html">ตารางเวร</a>
+                <a href="#contact">ติดต่อ</a>
+            </div>
+        </div>
+    </nav>
+
+    <section id="home">
+        <div class="circle-bg c1"></div>
+        <div class="circle-bg c2"></div>
+        <div class="container" data-aos="fade-up">
+            <h1>ดูแลสุขภาพของคุณ <br>คือภารกิจของเรา</h1>
+            <p>โรงพยาบาลมาตรฐานระดับสากล พร้อมทีมแพทย์ผู้เชี่ยวชาญ และเทคโนโลยีที่ทันสมัย</p>
+
+            <div style="margin-top: 30px; font-size: 1.2rem; color: var(--primary); font-weight: 600;">
+                <i class="fa-solid fa-star"></i> "ใส่ใจทุกชีวิต ดุจญาติมิตรของเรา"
+            </div>
+        </div>
+    </section>
+
+    <section id="about" style="background: white;">
+        <div class="container" data-aos="fade-up">
+            <h2>เกี่ยวกับโรงพยาบาล</h2>
+            <div class="white-card">
+                <p style="font-size: 1.1rem; color: #555;">
+                    "HOSPITAL CARE" มุ่งมั่นให้บริการทางการแพทย์ที่เป็นเลิศ ด้วยจรรยาบรรณวิชาชีพ
+                    เราผสานเทคโนโลยี AI Smart Hospital เข้ากับการดูแลที่ใส่ใจดุจญาติมิตร
+                </p>
+                <div style="margin-top: 30px; display: flex; justify-content: center; gap: 50px;">
+                    <div>
+                        <h3 style="font-size: 2rem; color: var(--primary); margin: 0;">24/7</h3><span
+                            style="color: #888;">บริการฉุกเฉิน</span>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 2rem; color: var(--primary); margin: 0;">50+</h3><span
+                            style="color: #888;">แพทย์เฉพาะทาง</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="services" style="overflow: hidden;">
+        <div class="container">
+            <h2 data-aos="fade-down" style="border-left: 5px solid var(--primary); padding-left: 15px;">
+                ศูนย์บริการทางการแพทย์
+            </h2>
+            <p style="margin-bottom: 30px; color: #666; text-align:center;">
+                ครอบคลุมทุกสาขาเฉพาะทางด้วยทีมแพทย์มืออาชีพ
+            </p>
+
+            <div style="position: relative; padding: 0 50px;">
+
+                <div class="swiper-button-prev custom-nav-btn"></div>
+
+                <div class="swiper mySwiper" style="padding: 20px 10px; padding-bottom: 50px;">
+                    <div class="swiper-wrapper" id="servicesList">
+                    </div>
+
+                    <div class="swiper-pagination"></div>
+                </div>
+
+                <div class="swiper-button-next custom-nav-btn"></div>
+
+            </div>
+
+        </div>
+    </section>
+
+    <section id="contact" style="background: #f8f9fa;">
+        <div class="container">
+            <h2 data-aos="fade-down">ข้อมูลติดต่อ</h2>
+
+            <div class="contact-grid">
+                <div class="contact-info" data-aos="fade-right">
+
+                    <div class="contact-item">
+                        <i class="fa-solid fa-location-dot"></i>
+                        <div>
+                            <h4>ที่อยู่</h4>
+                            <p id="contact-address">123 ถ.สุขุมวิท แขวงคลองเตย<br>เขตคลองเตย กรุงเทพฯ 10110</p>
+                        </div>
+                    </div>
+
+                    <div class="contact-item">
+                        <i class="fa-solid fa-phone"></i>
+                        <div>
+                            <h4>เบอร์โทรศัพท์</h4>
+                            <p id="contact-phone" style="font-weight:bold; font-size:1.1rem; color:#333;">02-123-4567
+                            </p>
+                            <p id="contact-emergency" style="font-size:0.85rem;">(แผนกฉุกเฉินตลอด 24 ชั่วโมง)</p>
+                        </div>
+                    </div>
+
+                    <div class="contact-item">
+                        <i class="fa-brands fa-line" style="background:#06c755; color:white;"></i>
+                        <div>
+                            <h4>Line Official</h4>
+                            <p id="contact-line">@hospital_care</p>
+                        </div>
+                    </div>
+
+                    <div class="contact-item">
+                        <i class="fa-solid fa-envelope"></i>
+                        <div>
+                            <h4>อีเมล</h4>
+                            <p id="contact-email">contact@hospital.com</p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="map-container" data-aos="fade-left">
+                    <iframe id="contact-map"
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3875.836267769986!2d100.5629!3d13.7291!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTPCsDQzJzQ0LjgiTiAxMDDCsDMzJzQ2LjQiRQ!5e0!3m2!1sth!2sth!4v1600000000000!5m2!1sth!2sth"
+                        width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy">
+                    </iframe>
+                </div>
+            </div>
+        </div>
+
+    </section>
+    <footer>
+        <p>© 2024 HOSPITAL CARE. All Rights Reserved.</p>
+    </footer>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+    <script type="module">
+        import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { db } from "./js/firebase-config.js";
+        import { loadServices } from "./js/services.js";
+
+        if (typeof AOS !== 'undefined') AOS.init();
+
+        window.onload = async function () {
+            await loadServices();
+            await loadContactInfo(); // เรียกใช้ฟังก์ชันดึงข้อมูลติดต่อ
+        };
+
+        // --- ฟังก์ชันสำหรับโหลดข้อมูลติดต่อจาก Database ---
+        async function loadContactInfo() {
+            try {
+                const snap = await getDocs(collection(db, "contact_info"));
+
+                if (!snap.empty) {
+                    // ดึงข้อมูลอันแรกที่เจอ (เพราะเราทำไว้ให้มีแค่รายการเดียว)
+                    const data = snap.docs[0].data();
+
+                    if (data.address) document.getElementById('contact-address').innerHTML = data.address;
+                    if (data.phone) document.getElementById('contact-phone').innerText = data.phone;
+                    if (data.emergency_note) document.getElementById('contact-emergency').innerText = data.emergency_note;
+                    if (data.line_id) document.getElementById('contact-line').innerText = data.line_id;
+                    if (data.email) document.getElementById('contact-email').innerText = data.email;
+                    if (data.map_url) document.getElementById('contact-map').src = data.map_url;
+                }
+            } catch (error) {
+                console.error("Error loading contact info:", error);
+            }
+        }
+
+    </script>
+</body>
+
+</html>
