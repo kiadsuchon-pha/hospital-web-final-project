@@ -22,7 +22,7 @@ export const schemas = {
             { key: "license_id", label: "เลขที่ใบอนุญาต (ว.)", type: "text" },
             { key: "dept_id", label: "แผนก", type: "text" },
             { key: "edu", label: "วุฒิการศึกษา", type: "dynamic_multi_text", isArray: true },
-            { key: "research", label: "บทความวิจัย", type: "dynamic_multi_text", isArray: true }
+            { key: "research", label: "บทความวิจัย", type: "dynamic_multi_text", isArray: true, hideInTable: true }
         ]
     },
     departments: { title: "แผนก", fields: [{ key: "id", label: "ID", type: "text", isId: true }, { key: "name", label: "ชื่อแผนก", type: "text" }, { key: "icon", label: "Icon", type: "text" }, { key: "is_active", label: "เปิดใช้งาน", type: "switch" }] },

@@ -6,11 +6,11 @@ html {
 }
 
 :root {
-    --primary: #0066cc;
+    --primary: #9F28E3;
     --danger: #dc3545;
     --success: #28a745;
     --warning: #ffc107;
-    --light: #f8f9fa;
+    --light: #FEFEFE;
     --dark: #343a40;
     --sidebar-width: 250px;
     --topbar-height: 60px;
@@ -327,7 +327,7 @@ input[type="checkbox"] {
 .grid-table th:first-child {
     text-align: left;
     width: 220px;
-    background: #0056b3;
+    background: var(--primary);
     position: sticky;
     left: 0;
     z-index: 10;
@@ -648,9 +648,9 @@ input[type="checkbox"] {
 }
 
 .btn-add-row {
-    background: #e6f7ff;
-    color: #0066cc;
-    border: 1px dashed #0066cc;
+    background: #fdf5ff; /* เปลี่ยนพื้นหลังให้อมม่วงอ่อนๆ */
+    color: var(--primary); /* ใช้ตัวแปรสีม่วง */
+    border: 1px dashed var(--primary); /* ใช้ตัวแปรสีม่วง */
     width: 100%;
     padding: 8px;
     border-radius: 6px;
@@ -660,7 +660,7 @@ input[type="checkbox"] {
 }
 
 .btn-add-row:hover {
-    background: #cceeff;
+    background: #f4e1fc; /* ปรับสีเมื่อ hover ให้เข้มขึ้นนิดหน่อย */
 }
 
 /* Schedule Grid New Styles */
@@ -755,8 +755,8 @@ input:checked+.slider:before {
 
 /* Doctor Status */
 .doc-assigned {
-    background: #e6f7ff;
-    color: #0066cc;
+    background: #fdf5ff;
+    color: var(--primary); 
     padding: 5px;
     border-radius: 4px;
     font-size: 0.85rem;
@@ -828,7 +828,8 @@ input:checked+.slider:before {
 }
 
 .dashboard-welcome h2::after {
-    display: none; /* ซ่อนเส้นขีดใต้ H2 ในแบนเนอร์ */
+    display: none;
+    /* ซ่อนเส้นขีดใต้ H2 ในแบนเนอร์ */
 }
 
 .dashboard-welcome p {
@@ -839,7 +840,7 @@ input:checked+.slider:before {
 
 .welcome-icon {
     font-size: 4rem;
-    opacity: 0.2;
+    opacity: 1;
 }
 
 .dashboard-grid {
@@ -854,7 +855,7 @@ input:checked+.slider:before {
     background: white;
     padding: 25px;
     border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     display: flex;
     align-items: center;
     gap: 20px;
@@ -864,7 +865,7 @@ input:checked+.slider:before {
 
 .stat-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
 .stat-icon {
