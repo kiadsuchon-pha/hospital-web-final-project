@@ -5,10 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>รายชื่อแพทย์ - HOSPITAL CARE</title>
-    
+
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/doctors.css">
 
@@ -31,21 +31,20 @@
     </nav>
 
     <div class="page-container" style="margin-top: 80px;">
-        
+
         <div class="search-area">
             <div class="search-header">
                 <h1><i class="fa-solid fa-user-doctor"></i> ค้นหาแพทย์ผู้เชี่ยวชาญ</h1>
                 <p style="color:#666;">เลือกแผนกหรือพิมพ์ชื่อแพทย์เพื่อค้นหา</p>
             </div>
-            
+
             <div class="search-inputs">
                 <select id="deptSelect" class="custom-select" onchange="filterDoctors()">
                     <option value="all">-- ทุกแผนก --</option>
                 </select>
 
-                <input type="text" id="nameInput" class="custom-input" 
-                       placeholder="พิมพ์ชื่อแพทย์ หรือคำค้นหา..." 
-                       onkeyup="filterDoctors()">
+                <input type="text" id="nameInput" class="custom-input" placeholder="พิมพ์ชื่อแพทย์ หรือคำค้นหา..."
+                    onkeyup="filterDoctors()">
             </div>
         </div>
 
@@ -86,7 +85,7 @@
                     if (data.is_active !== false) {
                         deptMap[d.id] = data.name;
                         const option = document.createElement('option');
-                        option.value = data.name; 
+                        option.value = data.name;
                         option.textContent = data.name;
                         deptSelect.appendChild(option);
                     }
@@ -95,16 +94,15 @@
                 let html = "";
                 docSnap.forEach(doc => {
                     const data = doc.data();
-                    
+
                     // 🌟 สร้าง Tag แผนกหลายๆ อัน
                     let deptArr = Array.isArray(data.dept_id) ? data.dept_id : (data.dept_id ? [data.dept_id] : []);
                     let deptNames = deptArr.map(id => deptMap[id] || "ไม่ระบุแผนก");
                     let deptSearchText = deptNames.join(" "); // ไว้ค้นหา
-                    let deptHtml = deptNames.map(name => `<div class="dept-badge" style="background: #e6f7ff; color: #0066cc; padding: 4px 12px; border-radius: 20px; display: inline-block; font-size: 0.8rem; margin-bottom: 5px; margin-right: 5px; font-weight: 600;">${name}</div>`).join('');
-
+                    let deptHtml = deptNames.map(name => `<div class="dept-badge" style="background: #fdf5ff; color: #9F28E3; padding: 4px 12px; border-radius: 20px; display: inline-block; font-size: 0.8rem; margin-bottom: 5px; margin-right: 5px; font-weight: 600;">${name}</div>`).join('');
                     let fullName = data.name || `${data.pname || ''} ${data.fname || ''} ${data.lname || ''}`.trim();
-                    let imageHtml = data.profile_image 
-                        ? `<img src="${data.profile_image}" alt="${fullName}" style="width: 100%; height: 100%; object-fit: cover;">` 
+                    let imageHtml = data.profile_image
+                        ? `<img src="${data.profile_image}" alt="${fullName}" style="width: 100%; height: 100%; object-fit: cover;">`
                         : `<i class="fa-solid fa-user-doctor" style="font-size: 4rem; color: #aaccff; margin-top: 30px;"></i>`;
 
                     html += `
@@ -145,7 +143,7 @@
         window.filterDoctors = function () {
             const selectedDept = document.getElementById("deptSelect").value.toUpperCase();
             const searchName = document.getElementById("nameInput").value.toUpperCase();
-            
+
             const cards = document.getElementsByClassName("doctor-card");
             let hasResult = false;
 

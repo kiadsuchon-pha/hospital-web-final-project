@@ -1,0 +1,142 @@
+body {
+    background: #f9fbfd;
+}
+
+.detail-container {
+    max-width: 1000px;
+    margin: 10px auto 50px auto;
+    padding: 0 20px;
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+.profile-sidebar {
+    flex: 1;
+    min-width: 300px;
+    background: white;
+    border-radius: 20px;
+    padding: 40px 20px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    height: fit-content;
+}
+
+.profile-img-box {
+    width: 180px;
+    height: 180px;
+    background: #eef7ff;
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 5px solid white;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.profile-img-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-img-box i {
+    font-size: 80px;
+    color: #aaccff;
+}
+
+.dept-tag {
+    background: #fdf5ff;
+    color: var(--primary);
+    padding: 6px 15px;
+    border-radius: 30px;
+    font-weight: 600;
+    display: inline-block;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+    border: 1px solid #f4e1fc;
+}
+
+.info-content {
+    flex: 2;
+    min-width: 350px;
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.section-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 10px;
+}
+
+.section-title i {
+    color: #9F28E3;
+}
+
+.info-list {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 30px;
+}
+
+.info-list li {
+    margin-bottom: 10px;
+    color: #555;
+    position: relative;
+    padding-left: 20px;
+    line-height: 1.6;
+}
+
+.info-list li::before {
+    content: "•";
+    color: #00cc99;
+    font-weight: bold;
+    position: absolute;
+    left: 0;
+}
+
+.schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.schedule-table th,
+.schedule-table td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+    vertical-align: top;
+}
+
+.schedule-table th {
+    background: #f8f9fa;
+    color: #666;
+    font-weight: 600;
+    width: 40%;
+}
+
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #666;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+.back-btn:hover {
+    color: #9F28E3;
+}

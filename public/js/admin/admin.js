@@ -6,9 +6,9 @@ import { db } from "../firebase-config.js";
 import { getDoctorName } from "../utils.js";
 import { schemas, menus } from "./config.js";
 
-import "./schedule.js"; 
-import "./modals.js"; 
-import "./logger.js"; 
+import "./schedule.js";
+import "./modals.js";
+import "./logger.js";
 import { initAdminPanel } from "./auth.js";
 
 window.currentCollection = 'doctors';
@@ -18,7 +18,7 @@ window.switchCategory = function (cat, el) {
     window.currentCategory = cat;
     document.querySelectorAll('.top-item').forEach(e => e.classList.remove('active'));
     el.classList.add('active');
-    window.renderSidebar(); 
+    window.renderSidebar();
     const firstMenu = menus[cat].find(m => !m.type);
     if (firstMenu) window.switchView(firstMenu.id);
 }
@@ -34,13 +34,13 @@ window.renderSidebar = function () {
 }
 
 window.switchView = function (viewId, el) {
-    if (el) { 
-        document.querySelectorAll('.menu-item').forEach(e => e.classList.remove('active')); 
-        el.classList.add('active'); 
+    if (el) {
+        document.querySelectorAll('.menu-item').forEach(e => e.classList.remove('active'));
+        el.classList.add('active');
     } else {
         window.renderSidebar();
     }
-    
+
     document.querySelectorAll('.section-view').forEach(e => e.classList.remove('active'));
     if (document.getElementById('tableFilterBar')) document.getElementById('tableFilterBar').style.display = 'none';
 
@@ -53,8 +53,8 @@ window.switchView = function (viewId, el) {
         if (window.currentScheduleMode === 'grid') window.loadScheduleManager(); else window.loadScheduleList();
     } else if (viewId.startsWith('logs_')) {
         document.getElementById('auditLogsView').classList.add('active');
-        const category = viewId.split('_')[1]; 
-        if(window.loadLogs) window.loadLogs(category);
+        const category = viewId.split('_')[1];
+        if (window.loadLogs) window.loadLogs(category);
     } else if (viewId === 'import') {
         document.getElementById('importView').classList.add('active');
         window.updateInstruction();
@@ -77,14 +77,14 @@ window.loadDashboard = async () => {
             getDocs(collection(db, "doctor_schedules")),
             getDocs(collection(db, "users"))
         ]);
-        
+
         document.getElementById('statDoctors').innerText = docSnap.size;
         document.getElementById('statDepts').innerText = deptSnap.docs.filter(d => d.data().is_active !== false).length;
         document.getElementById('statSchedules').innerText = schSnap.size;
-        
+
         const statUsersElement = document.getElementById('statUsers');
         if (statUsersElement) statUsersElement.innerText = userSnap.size;
-    } catch(e) {
+    } catch (e) {
         console.error("Dashboard Load Error:", e);
     }
 }
@@ -100,7 +100,7 @@ window.loadTable = async function () {
     const filterSpec = document.getElementById('filterSpec')?.value || "";
 
     let headerHtml = `<tr><th class="chk-col"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>`;
-    schema.fields.forEach(f => { if (!f.isId) headerHtml += `<th>${f.label}</th>`; });
+    schema.fields.forEach(f => { if (!f.isId && !f.hideInTable) headerHtml += `<th>${f.label}</th>`; });
     headerHtml += `<th>จัดการ</th></tr>`;
     thead.innerHTML = headerHtml;
 
@@ -114,21 +114,21 @@ window.loadTable = async function () {
 
         const snap = await getDocs(collection(db, window.currentCollection));
         let html = "";
-        
+
         let tableData = [];
         snap.forEach(d => tableData.push({ id: d.id, ...d.data() }));
 
         tableData.forEach(data => {
             if (window.currentCollection === 'doctors') {
                 const name = getDoctorName(data).toLowerCase();
-                const nameEn = (data.name_en || `${data.fname_en||''} ${data.lname_en||''}`).toLowerCase();
-                
+                const nameEn = (data.name_en || `${data.fname_en || ''} ${data.lname_en || ''}`).toLowerCase();
+
                 // 🌟 ประมวลผล Array ของแผนก
                 let deptArr = Array.isArray(data.dept_id) ? data.dept_id : (data.dept_id ? [data.dept_id] : []);
                 const deptSearchText = deptArr.map(id => deptMap[id] || "").join(" ").toLowerCase();
 
                 if (searchText && !name.includes(searchText) && !nameEn.includes(searchText) && !deptSearchText.includes(searchText)) return;
-                
+
                 if (filterDept) {
                     if (!deptArr.includes(filterDept)) return;
                 }
@@ -136,12 +136,12 @@ window.loadTable = async function () {
             }
 
             if (window.currentCollection === 'users') {
-                if (window.currentUser.role === 'Admin' && data.role !== 'Secretary') return; 
+                if (window.currentUser.role === 'Admin' && data.role !== 'Secretary') return;
             }
 
             html += `<tr><td class="chk-col"><input type="checkbox" class="row-check" value="${data.id}" onchange="checkBulkBtn()"></td>`;
             schema.fields.forEach(f => {
-                if (!f.isId) {
+                if (!f.isId && !f.hideInTable) { // เพิ่มเงื่อนไขตรงนี้
                     let val = data[f.key];
                     if (f.type === 'switch') val = `<label class="switch"><input type="checkbox" ${val ? 'checked' : ''} onchange="toggleItemStatus('${window.currentCollection}','${data.id}','${f.key}',this.checked)"><span class="slider round"></span></label>`;
                     else if (f.type === 'image') val = val ? `<img src="${val}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` : '-';
@@ -153,7 +153,7 @@ window.loadTable = async function () {
                     else if (f.key === 'password') val = '<span style="color:#aaa; letter-spacing: 2px;">••••••••</span>';
                     else if (f.type === 'date' && val) {
                         const parts = val.split('-');
-                        if(parts.length === 3) val = `${parts[2]}/${parts[1]}/${parseInt(parts[0])+543}`;
+                        if (parts.length === 3) val = `${parts[2]}/${parts[1]}/${parseInt(parts[0]) + 543}`;
                     }
 
                     html += `<td>${val || '-'}</td>`;
@@ -165,7 +165,7 @@ window.loadTable = async function () {
     } catch (e) { console.error(e); }
 }
 
-window.loadFilterOptions = async function() {
+window.loadFilterOptions = async function () {
     const deptSelect = document.getElementById('filterDept'), specSelect = document.getElementById('filterSpec');
     if (!deptSelect) return;
     const [deptSnap, specSnap] = await Promise.all([getDocs(collection(db, "departments")), getDocs(collection(db, "specialties"))]);
@@ -175,19 +175,19 @@ window.loadFilterOptions = async function() {
 
 window.applyFilters = () => window.loadTable();
 
-window.deleteItem = async (id) => { 
-    if (confirm("ลบข้อมูลนี้?")) { 
-        await deleteDoc(doc(db, window.currentCollection, id)); 
+window.deleteItem = async (id) => {
+    if (confirm("ลบข้อมูลนี้?")) {
+        await deleteDoc(doc(db, window.currentCollection, id));
         const logCat = window.currentCollection === 'users' ? 'system' : 'data';
-        if(window.saveLog) window.saveLog("ลบข้อมูล", `ลบข้อมูล ID: ${id} ออกจากหมวด ${schemas[window.currentCollection].title}`, logCat);
-        window.loadTable(); 
-    } 
+        if (window.saveLog) window.saveLog("ลบข้อมูล", `ลบข้อมูล ID: ${id} ออกจากหมวด ${schemas[window.currentCollection].title}`, logCat);
+        window.loadTable();
+    }
 }
 
-window.toggleItemStatus = async (coll, id, field, status) => { 
-    await setDoc(doc(db, coll, id), { [field]: status }, { merge: true }); 
-    if(window.saveLog) window.saveLog(status ? "เปิดใช้งาน" : "ปิดใช้งาน", `ปรับสถานะของ ID: ${id} ในหมวด ${schemas[coll].title}`);
-    window.loadTable(); 
+window.toggleItemStatus = async (coll, id, field, status) => {
+    await setDoc(doc(db, coll, id), { [field]: status }, { merge: true });
+    if (window.saveLog) window.saveLog(status ? "เปิดใช้งาน" : "ปิดใช้งาน", `ปรับสถานะของ ID: ${id} ในหมวด ${schemas[coll].title}`);
+    window.loadTable();
 }
 
 window.toggleSelectAll = () => { document.querySelectorAll('.row-check').forEach(cb => cb.checked = document.getElementById('selectAll').checked); window.checkBulkBtn(); };
@@ -205,8 +205,8 @@ window.deleteBulk = async () => {
         const originalText = btn.innerHTML; btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังลบ...`; btn.disabled = true;
         try {
             await Promise.all(Array.from(checkedBoxes).map(cb => deleteDoc(doc(db, window.currentCollection, cb.value))));
-            if(window.saveLog) window.saveLog("ลบข้อมูลหลายรายการ", `ลบข้อมูลจำนวน ${checkedBoxes.length} รายการ ออกจากหมวด ${schemas[window.currentCollection].title}`);
-            alert(`✅ ลบข้อมูลสำเร็จ ${checkedBoxes.length} รายการ!`); window.loadTable(); 
+            if (window.saveLog) window.saveLog("ลบข้อมูลหลายรายการ", `ลบข้อมูลจำนวน ${checkedBoxes.length} รายการ ออกจากหมวด ${schemas[window.currentCollection].title}`);
+            alert(`✅ ลบข้อมูลสำเร็จ ${checkedBoxes.length} รายการ!`); window.loadTable();
         } catch (error) { alert("❌ เกิดข้อผิดพลาด: " + error.message); }
         btn.innerHTML = originalText; btn.disabled = false;
     }
