@@ -9,205 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <style>
-        :root {
-            --primary: #0066cc;
-            --secondary: #00cc99;
-            --text-dark: #333;
-            --white: #ffffff;
-        }
-
-        body {
-            margin: 0;
-            font-family: 'Sarabun', sans-serif;
-            background: #f4f6f9;
-            color: var(--text-dark);
-        }
-
-        nav {
-            background: white;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-        nav .container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 20px;
-            max-width: 1100px;
-            margin: 0 auto;
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--primary);
-        }
-
-        .nav-links a {
-            color: var(--text-dark);
-            text-decoration: none;
-            margin-left: 30px;
-            font-weight: 500;
-            transition: 0.3s;
-        }
-
-        .nav-links a:hover {
-            color: var(--primary);
-        }
-
-        .page-container {
-            max-width: 1200px;
-            margin: 40px auto;
-            padding: 20px;
-        }
-
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-
-        h1 {
-            color: var(--primary);
-            margin: 0;
-            border-left: 5px solid var(--secondary);
-            padding-left: 15px;
-        }
-
-        .btn-doctor-search {
-            text-decoration: none;
-            background: var(--primary);
-            color: white;
-            padding: 10px 25px;
-            border-radius: 30px;
-            font-weight: bold;
-            box-shadow: 0 4px 10px rgba(0, 102, 204, 0.3);
-            transition: 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn-doctor-search:hover {
-            background: #0052a3;
-            transform: translateY(-2px);
-        }
-
-        .table-responsive {
-            overflow-x: auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
-            border: 1px solid #eef2f6;
-        }
-
-        /* --- แก้ไขตารางตายตัว --- */
-        .opd-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            min-width: 1000px;
-            table-layout: fixed;
-        }
-
-        .opd-table th {
-            background-color: #0066cc;
-            color: white;
-            padding: 15px;
-            text-align: center;
-            font-weight: 600;
-        }
-
-        .opd-table th:first-child {
-            text-align: left;
-            padding-left: 20px;
-            position: sticky;
-            left: 0;
-            z-index: 10;
-            background-color: #0066cc;
-            width: 250px;
-        }
-
-        .opd-table td {
-            padding: 12px 15px;
-            border-bottom: 1px solid #f0f4f8;
-            text-align: center;
-            vertical-align: middle;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-        }
-
-        .opd-table td:first-child {
-            text-align: left;
-            padding-left: 20px;
-            font-weight: bold;
-            color: #333;
-            background: #fff;
-            position: sticky;
-            left: 0;
-            border-right: 2px solid #eee;
-        }
-
-        .opd-table tr:hover td {
-            background-color: #f8fbff;
-        }
-
-        .dept-icon-wrapper {
-            display: inline-flex;
-            width: 35px;
-            height: 35px;
-            background: #eef7ff;
-            border-radius: 50%;
-            align-items: center;
-            justify-content: center;
-            color: var(--primary);
-            margin-right: 10px;
-            flex-shrink: 0;
-        }
-
-        .time-badge {
-            display: block; 
-            padding: 6px 12px;
-            border-radius: 20px; 
-            font-size: 0.85rem;
-            margin: 4px auto; 
-            font-weight: 600;
-            width: fit-content;
-            min-width: 135px; 
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            transition: 0.2s;
-        }
-
-        .time-badge:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 3px 5px rgba(0,0,0,0.1);
-        }
-
-        .time-badge.morning {
-            background-color: #fff7ed; 
-            color: #ea580c; 
-            border: 1px solid #fed7aa;
-        }
-
-        .time-badge.afternoon {
-            background-color: #eff6ff; 
-            color: #2563eb; 
-            border: 1px solid #bfdbfe;
-        }
-
-        .inactive-dash {
-            color: #e5e7eb;
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-    </style>
+    <link rel="stylesheet" href="css/style-opd.css">
 </head>
 
 <body>
@@ -230,7 +32,9 @@
         <div class="page-header">
             <div>
                 <h1>ตารางเวลาทำการแผนก (OPD Schedule)</h1>
-                <p style="color:#666; margin:5px 0 0 20px;">ตรวจสอบวันและเวลาทำการของแต่ละศูนย์รักษา <span id="lastUpdatedText" style="color:var(--primary); font-weight: 600; margin-left: 5px;"></span></p>
+                <p style="color:#666; margin:5px 0 0 20px;">ตรวจสอบวันและเวลาทำการของแต่ละศูนย์รักษา <span
+                        id="lastUpdatedText" style="color:var(--primary); font-weight: 600; margin-left: 5px;"></span>
+                </p>
             </div>
 
             <a href="doctor-schedule.html" class="btn-doctor-search">
@@ -275,13 +79,13 @@
                 // ดึง log ล่าสุดมา 1 รายการ
                 const logQ = query(collection(db, "audit_logs"), orderBy("timestamp", "desc"), limit(1));
                 const logSnap = await getDocs(logQ);
-                
+
                 if (!logSnap.empty) {
                     const latestLog = logSnap.docs[0].data();
                     const dateObj = new Date(latestLog.timestamp);
                     const dateStr = dateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
                     const timeStr = dateObj.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-                    
+
                     // แสดงผลในวงเล็บ
                     document.getElementById('lastUpdatedText').innerText = `(อัปเดตล่าสุด: ${dateStr})`;
                 }
@@ -313,8 +117,8 @@
 
                 let html = "";
                 const days = ["จันทร์", "อังคาร", "พุธ", "พฤหัส", "ศุกร์"];
-                
-                const shiftConfig = { 
+
+                const shiftConfig = {
                     '1': { label: '08:00 - 12:00', icon: '<i class="fa-regular fa-sun"></i>', cssClass: 'morning' },
                     '2': { label: '13:00 - 16:00', icon: '<i class="fa-solid fa-cloud-sun"></i>', cssClass: 'afternoon' }
                 };
@@ -326,7 +130,7 @@
 
                 depts.forEach(dData => {
                     const dId = dData.id;
-                    
+
                     html += `<tr>`;
                     html += `<td>
                                 <div style="display:flex; align-items:center;">
@@ -338,7 +142,7 @@
                     days.forEach(day => {
                         const activeShifts = scheduleMap[dId]?.[day] || [];
                         html += `<td>`;
-                        
+
                         if (activeShifts.length > 0) {
                             activeShifts.sort();
                             activeShifts.forEach(shift => {
@@ -366,4 +170,5 @@
     </script>
 
 </body>
+
 </html>

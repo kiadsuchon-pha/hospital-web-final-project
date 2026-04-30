@@ -6,12 +6,12 @@ html {
 }
 
 :root {
-    --primary: #0066cc;
+    --primary: #9F28E3;
     --secondary: #00cc99;
     --accent: #f0f8ff;
     --text-dark: #333;
     --text-light: #666;
-    --white: #ffffff;
+    --white: #FEFEFE;
     --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
@@ -62,7 +62,7 @@ h2::after {
     display: block;
     width: 60px;
     height: 4px;
-    background: var(--secondary);
+    background: var(--primary);
     margin: 15px auto 0;
     border-radius: 2px;
 }
@@ -212,8 +212,10 @@ nav .container {
 
 .service-card:hover {
     transform: translateY(-10px);
-    box-shadow: 0 20px 40px rgba(0, 102, 204, 0.15);
-    border-color: #b3d7ff;
+    box-shadow: 0 20px 40px rgba(159, 40, 227, 0.15);
+    /* เปลี่ยนสีเงา */
+    border-color: #f4e1fc;
+    /* ขอบสีม่วงอ่อน */
 }
 
 .service-card::before {
@@ -236,7 +238,7 @@ nav .container {
 .service-icon {
     width: 80px;
     height: 80px;
-    background: #eef7ff;
+    background: #fdf5ff;
     color: var(--primary);
     border-radius: 50%;
     display: flex;
@@ -245,14 +247,14 @@ nav .container {
     font-size: 2.5rem;
     margin-bottom: 20px;
     transition: 0.4s;
-    box-shadow: inset 0 0 20px rgba(0, 102, 204, 0.05);
+    box-shadow: inset 0 0 20px rgba(159, 40, 227, 0.05);
 }
 
 .service-card:hover .service-icon {
     background: var(--primary);
-    color: #fff;
+    color: var(--white);
     transform: rotateY(180deg);
-    box-shadow: 0 10px 20px rgba(0, 102, 204, 0.3);
+    box-shadow: 0 10px 20px rgba(159, 40, 227, 0.3);
 }
 
 .service-card h3 {
@@ -298,8 +300,8 @@ nav .container {
 }
 
 .custom-nav-btn {
-    color: #0066cc !important;
-    background: white;
+    color: var(--primary) !important;
+    background: var(--white);
     width: 45px;
     height: 45px;
     border-radius: 50%;
@@ -309,10 +311,10 @@ nav .container {
 }
 
 .custom-nav-btn:hover {
-    background: #0066cc;
-    color: white !important;
+    background: var(--primary);
+    color: var(--white) !important;
     transform: scale(1.1);
-    box-shadow: 0 8px 20px rgba(0, 102, 204, 0.3);
+    box-shadow: 0 8px 20px rgba(159, 40, 227, 0.3);
 }
 
 .custom-nav-btn::after {
