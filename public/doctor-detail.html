@@ -63,7 +63,10 @@
 
                 const doctor = docSnap.data();
                 const nameTH = `${doctor.pname || ''} ${doctor.fname || ''} ${doctor.lname || ''}`.trim();
-                const nameEN = `${doctor.pname_en || ''} ${doctor.fname_en || ''} ${doctor.lname_en || ''}`.trim();
+                let nameEN = `${doctor.fname_en || ''} ${doctor.lname_en || ''}`.trim();
+                if (doctor.pname_en) {
+                    nameEN = nameEN ? `${nameEN}, ${doctor.pname_en}` : doctor.pname_en;
+                }
 
                 // 🌟 ดึงชื่อแผนกหลายๆ อัน (Promise.all)
                 let deptArr = Array.isArray(doctor.dept_id) ? doctor.dept_id : (doctor.dept_id ? [doctor.dept_id] : []);

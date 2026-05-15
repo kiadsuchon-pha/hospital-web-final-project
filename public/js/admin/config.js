@@ -1,5 +1,5 @@
 // ==========================================
-// ไฟล์: js/admin/config.js
+// ไฟล์: js/admin/config.js (ฉบับแก้ไข)
 // ==========================================
 export const SHIFTS = {
     '1': { label: 'เช้า (08:00 - 12:00)', time: '08:00 - 12:00' },
@@ -18,10 +18,10 @@ export const schemas = {
             { key: "pname_en", label: "คำนำหน้า (EN)", type: "select" },
             { key: "fname_en", label: "ชื่อจริง (EN)", type: "text" },
             { key: "lname_en", label: "นามสกุล (EN)", type: "text" },
-            { key: "specialties", label: "ความเชี่ยวชาญ", type: "dynamic_multi_select", isArray: true },
+            { key: "specialties", label: "ความเชี่ยวชาญ", type: "dynamic_multi_select", isArray: true, hideInTable: true  },
             { key: "license_id", label: "เลขที่ใบอนุญาต (ว.)", type: "text" },
             { key: "dept_id", label: "แผนก", type: "text" },
-            { key: "edu", label: "วุฒิการศึกษา", type: "dynamic_multi_text", isArray: true },
+            { key: "edu", label: "วุฒิการศึกษา", type: "dynamic_multi_text", isArray: true, hideInTable: true  },
             { key: "research", label: "บทความวิจัย", type: "dynamic_multi_text", isArray: true, hideInTable: true }
         ]
     },
@@ -31,7 +31,18 @@ export const schemas = {
     prefixes_en: { title: "คำนำหน้าชื่อ (EN)", fields: [{ key: "id", label: "ID", type: "text", isId: true }, { key: "name", label: "คำนำหน้า (EN)", type: "text", required: true }] },
     specialties: { title: "ความเชี่ยวชาญ", fields: [{ key: "id", label: "ID", type: "text", isId: true }, { key: "name", label: "ชื่อความเชี่ยวชาญ", type: "text", required: true }] },
     positions: { title: "ตำแหน่ง", fields: [{ key: "id", label: "ID", type: "text", isId: true }, { key: "name", label: "ตำแหน่ง", type: "text", required: true }] },
-    contact_info: { title: "ข้อมูลติดต่อ", fields: [{ key: "id", label: "ID", type: "text", isId: true }, { key: "address", label: "ที่อยู่", type: "text", required: true }, { key: "phone", label: "เบอร์โทรศัพท์", type: "text", required: true }, { key: "map_url", label: "ลิงก์แผนที่", type: "text" }] },
+    contact_info: { 
+        title: "ข้อมูลติดต่อ", 
+        fields: [
+            { key: "id", label: "ID", type: "text", isId: true }, 
+            { key: "address", label: "ที่อยู่", type: "text", required: true }, 
+            { key: "phone", label: "เบอร์โทรศัพท์", type: "text", required: true },
+            { key: "emergency_note", label: "ข้อความรองรับเบอร์โทร (เช่น ตลอด 24 ชม.)", type: "text" },
+            { key: "line_id", label: "Line ID (เช่น @hospital_care)", type: "text" },
+            { key: "email", label: "อีเมล", type: "text" },
+            { key: "map_url", label: "ลิงก์แผนที่ Google Map (src)", type: "text" }
+        ] 
+    },
     users: {
         title: "บัญชีผู้ใช้",
         fields: [
@@ -56,7 +67,7 @@ export const menus = {
         { id: 'locations', name: 'ห้อง/สถานที่', icon: 'fa-map-location-dot' },
         { type: 'header', title: 'ข้อมูลพื้นฐาน' },
         { id: 'specialties', name: 'ความเชี่ยวชาญ', icon: 'fa-star' },
-        { id: 'positions', name: 'ตำแหน่ง', icon: 'fa-id-badge' },
+        // ❌ จัดการตำแหน่ง ถูกนำออกแล้ว
         { id: 'prefixes_th', name: 'คำนำหน้าชื่อ (TH)', icon: 'fa-heading' },
         { id: 'prefixes_en', name: 'คำนำหน้าชื่อ (EN)', icon: 'fa-font' }
     ],
@@ -66,6 +77,7 @@ export const menus = {
     ],
     system: [
         { type: 'header', title: 'การจัดการระบบ' },
+        { id: 'contact_info', name: 'จัดการข้อมูลติดต่อ', icon: 'fa-address-book' },
         { id: 'users', name: 'จัดการบัญชีผู้ใช้', icon: 'fa-users-gear' },
         { id: 'import', name: 'นำเข้าข้อมูล (Import)', icon: 'fa-cloud-upload' },
         { type: 'header', title: 'ประวัติการทำงาน (Audit Logs)' },

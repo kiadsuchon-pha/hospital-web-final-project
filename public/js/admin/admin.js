@@ -14,6 +14,9 @@ import { initAdminPanel } from "./auth.js";
 window.currentCollection = 'doctors';
 window.currentCategory = 'data';
 
+// ตารางที่เป็น "โครงสร้างโรงพยาบาล"
+const hospitalStructureTables = ['departments', 'locations'];
+
 window.switchCategory = function (cat, el) {
     window.currentCategory = cat;
     document.querySelectorAll('.top-item').forEach(e => e.classList.remove('active'));
@@ -61,6 +64,14 @@ window.switchView = function (viewId, el) {
     } else {
         document.getElementById('tableView').classList.add('active');
         window.currentCollection = viewId;
+
+        // 🌟 2. ซ่อนปุ่ม "เพิ่มข้อมูล" สำหรับ Secretary ในหน้าโครงสร้างโรงพยาบาล
+        const addBtn = document.querySelector('.action-bar .btn-add');
+        if (addBtn) {
+            const isReadOnly = window.currentUser.role === 'Secretary' && hospitalStructureTables.includes(viewId);
+            addBtn.style.display = isReadOnly ? 'none' : 'inline-flex';
+        }
+
         if (window.currentCollection === 'doctors') {
             document.getElementById('tableFilterBar').style.display = 'flex';
             window.loadFilterOptions();
@@ -92,58 +103,72 @@ window.loadDashboard = async () => {
 window.loadTable = async function () {
     const tbody = document.getElementById('tableBody');
     const thead = document.getElementById('tableHead');
-    const schema = schemas[window.currentCollection];
+
+    // 🌟 1. จำค่า Collection ณ วินาทีที่ฟังก์ชันถูกเรียก
+    const targetCollection = window.currentCollection;
+    const schema = schemas[targetCollection];
+
     document.getElementById('pageTitle').innerText = `จัดการ${schema.title}`;
+
+    // 🌟 2. เคลียร์ข้อมูลเก่าและขึ้นสถานะ Loading ทันที
+    tbody.innerHTML = `<tr><td colspan="10" align="center" style="padding: 30px;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลดข้อมูล...</td></tr>`;
+
+    // ตรวจสอบสิทธิ์ Read-only
+    const isReadOnly = window.currentUser.role === 'Secretary' && hospitalStructureTables.includes(targetCollection);
 
     const searchText = document.getElementById('searchInput')?.value.toLowerCase() || "";
     const filterDept = document.getElementById('filterDept')?.value || "";
     const filterSpec = document.getElementById('filterSpec')?.value || "";
 
-    let headerHtml = `<tr><th class="chk-col"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>`;
+    // สร้าง Header ตาราง
+    let headerHtml = `<tr><th class="chk-col">${isReadOnly ? '' : '<input type="checkbox" id="selectAll" onchange="toggleSelectAll()">'}</th>`;
     schema.fields.forEach(f => { if (!f.isId && !f.hideInTable) headerHtml += `<th>${f.label}</th>`; });
     headerHtml += `<th>จัดการ</th></tr>`;
     thead.innerHTML = headerHtml;
 
     try {
         let deptMap = {}, specMap = {};
-        if (window.currentCollection === 'doctors') {
+        if (targetCollection === 'doctors') {
             const [dSnap, sSnap] = await Promise.all([getDocs(collection(db, 'departments')), getDocs(collection(db, 'specialties'))]);
             dSnap.forEach(d => deptMap[d.id] = d.data().name);
             sSnap.forEach(d => specMap[d.id] = d.data().name);
         }
 
-        const snap = await getDocs(collection(db, window.currentCollection));
-        let html = "";
+        // ดึงข้อมูลโดยใช้เป้าหมายที่ถูกล็อกไว้ (targetCollection) ไม่ใช่ Global Variable
+        const snap = await getDocs(collection(db, targetCollection));
 
+        // 🌟 3. ป้องกัน Race Condition: ถ้าระหว่างที่รอข้อมูล (await) ผู้ใช้กดเปลี่ยนหน้าไปแล้ว ให้หยุดการทำงานทันที
+        if (window.currentCollection !== targetCollection) {
+            return; // หยุดการทำงาน ไม่ต้องเรนเดอร์ตารางทับของใหม่
+        }
+
+        let html = "";
         let tableData = [];
         snap.forEach(d => tableData.push({ id: d.id, ...d.data() }));
 
         tableData.forEach(data => {
-            if (window.currentCollection === 'doctors') {
+            if (targetCollection === 'doctors') {
                 const name = getDoctorName(data).toLowerCase();
                 const nameEn = (data.name_en || `${data.fname_en || ''} ${data.lname_en || ''}`).toLowerCase();
-
-                // 🌟 ประมวลผล Array ของแผนก
                 let deptArr = Array.isArray(data.dept_id) ? data.dept_id : (data.dept_id ? [data.dept_id] : []);
                 const deptSearchText = deptArr.map(id => deptMap[id] || "").join(" ").toLowerCase();
-
                 if (searchText && !name.includes(searchText) && !nameEn.includes(searchText) && !deptSearchText.includes(searchText)) return;
-
-                if (filterDept) {
-                    if (!deptArr.includes(filterDept)) return;
-                }
+                if (filterDept && !deptArr.includes(filterDept)) return;
                 if (filterSpec && !(Array.isArray(data.specialties) ? data.specialties.includes(filterSpec) : data.specialties === filterSpec)) return;
             }
 
-            if (window.currentCollection === 'users') {
+            if (targetCollection === 'users') {
                 if (window.currentUser.role === 'Admin' && data.role !== 'Secretary') return;
             }
 
-            html += `<tr><td class="chk-col"><input type="checkbox" class="row-check" value="${data.id}" onchange="checkBulkBtn()"></td>`;
+            html += `<tr><td class="chk-col">${isReadOnly ? '' : `<input type="checkbox" class="row-check" value="${data.id}" onchange="checkBulkBtn()">`}</td>`;
+
             schema.fields.forEach(f => {
-                if (!f.isId && !f.hideInTable) { // เพิ่มเงื่อนไขตรงนี้
+                if (!f.isId && !f.hideInTable) {
                     let val = data[f.key];
-                    if (f.type === 'switch') val = `<label class="switch"><input type="checkbox" ${val ? 'checked' : ''} onchange="toggleItemStatus('${window.currentCollection}','${data.id}','${f.key}',this.checked)"><span class="slider round"></span></label>`;
+                    if (f.type === 'switch') {
+                        val = `<label class="switch"><input type="checkbox" ${val ? 'checked' : ''} ${isReadOnly ? 'disabled' : `onchange="toggleItemStatus('${targetCollection}','${data.id}','${f.key}',this.checked)"`}><span class="slider round"></span></label>`;
+                    }
                     else if (f.type === 'image') val = val ? `<img src="${val}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` : '-';
                     else if (f.key === 'dept_id') {
                         let dArr = Array.isArray(val) ? val : (val ? [val] : []);
@@ -155,16 +180,24 @@ window.loadTable = async function () {
                         const parts = val.split('-');
                         if (parts.length === 3) val = `${parts[2]}/${parts[1]}/${parseInt(parts[0]) + 543}`;
                     }
-
                     html += `<td>${val || '-'}</td>`;
                 }
             });
-            html += `<td><button class="btn-edit" onclick="prepareEdit('${data.id}')">แก้ไข</button> <button class="btn-del" onclick="deleteItem('${data.id}')">ลบ</button></td></tr>`;
+
+            let actionHtml = isReadOnly ? '<span style="color:#999; font-size:0.8rem;">ดูได้อย่างเดียว</span>' : `<button class="btn-edit" onclick="prepareEdit('${data.id}')">แก้ไข</button> <button class="btn-del" onclick="deleteItem('${data.id}')">ลบ</button>`;
+            html += `<td>${actionHtml}</td></tr>`;
         });
-        tbody.innerHTML = html || `<tr><td colspan="10" align="center">ไม่พบข้อมูล</td></tr>`;
-    } catch (e) { console.error(e); }
+
+        tbody.innerHTML = html || `<tr><td colspan="10" align="center" style="padding: 30px;">ไม่พบข้อมูลในหมวดหมู่นี้</td></tr>`;
+
+    } catch (e) {
+        console.error("Load Table Error:", e);
+        // 🌟 4. ดัก Error ให้ UI แจ้งเตือน แทนที่จะพังไปเฉยๆ
+        tbody.innerHTML = `<tr><td colspan="10" align="center" style="color: #dc3545; padding: 30px;"><i class="fa-solid fa-triangle-exclamation"></i> เกิดข้อผิดพลาดในการโหลดข้อมูล กรุณาลองใหม่อีกครั้ง</td></tr>`;
+    }
 }
 
+// ... ส่วนที่เหลือของไฟล์คงเดิม ...
 window.loadFilterOptions = async function () {
     const deptSelect = document.getElementById('filterDept'), specSelect = document.getElementById('filterSpec');
     if (!deptSelect) return;

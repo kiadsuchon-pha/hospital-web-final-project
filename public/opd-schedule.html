@@ -65,7 +65,6 @@
     </div>
 
     <script type="module">
-        // 👇 เพิ่ม query, orderBy, limit เข้ามา
         import { collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { db } from "./js/firebase-config.js";
 
@@ -74,91 +73,138 @@
         async function loadOPDSchedule() {
             const tableBody = document.getElementById('opdTableBody');
 
-            // 🌟 ส่วนดึงเวลาอัปเดตล่าสุดจาก Audit Logs
             try {
-                // ดึง log ล่าสุดมา 1 รายการ
                 const logQ = query(collection(db, "audit_logs"), orderBy("timestamp", "desc"), limit(1));
                 const logSnap = await getDocs(logQ);
-
                 if (!logSnap.empty) {
                     const latestLog = logSnap.docs[0].data();
                     const dateObj = new Date(latestLog.timestamp);
                     const dateStr = dateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
-                    const timeStr = dateObj.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-
-                    // แสดงผลในวงเล็บ
                     document.getElementById('lastUpdatedText').innerText = `(อัปเดตล่าสุด: ${dateStr})`;
                 }
             } catch (logError) {
                 console.error("ไม่สามารถดึงเวลาอัปเดตล่าสุดได้:", logError);
             }
 
-            // 🌟 ส่วนดึงตารางแผนก
             try {
-                const [deptSnap, opdSnap] = await Promise.all([
+                const [deptSnap, opdSnap, locSnap] = await Promise.all([
                     getDocs(collection(db, "departments")),
-                    getDocs(collection(db, "opd_schedules"))
+                    getDocs(collection(db, "opd_schedules")),
+                    getDocs(collection(db, "locations"))
                 ]);
 
-                let depts = [];
+                const locsMap = {};
+                locSnap.forEach(doc => locsMap[doc.id] = doc.data().name);
+
+                let deptsMap = {};
                 deptSnap.forEach(doc => {
                     if (doc.data().is_active !== false) {
-                        depts.push({ id: doc.id, ...doc.data() });
+                        deptsMap[doc.id] = doc.data();
                     }
                 });
 
-                const scheduleMap = {};
+                if (Object.keys(deptsMap).length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#888;">ไม่พบข้อมูลแผนก</td></tr>`;
+                    return;
+                }
+
+                const groupedData = {};
+
                 opdSnap.forEach(doc => {
                     const d = doc.data();
-                    if (!scheduleMap[d.dept_id]) scheduleMap[d.dept_id] = {};
-                    if (!scheduleMap[d.dept_id][d.day]) scheduleMap[d.dept_id][d.day] = [];
-                    scheduleMap[d.dept_id][d.day].push(d.shift);
+                    if (d.active === false) return;
+
+                    const locId = d.location_id;
+                    const deptId = d.dept_id;
+                    const day = d.day;
+                    const shift = String(d.shift);
+
+                    if (!locId || !deptId || !deptsMap[deptId]) return;
+
+                    if (!groupedData[locId]) {
+                        groupedData[locId] = {
+                            name: locsMap[locId] || "ไม่ระบุสถานที่",
+                            departments: {}
+                        };
+                    }
+
+                    if (!groupedData[locId].departments[deptId]) {
+                        groupedData[locId].departments[deptId] = {
+                            name: deptsMap[deptId].name,
+                            icon: deptsMap[deptId].icon || 'fa-hospital',
+                            schedules: {
+                                "จันทร์": { '1': false, '2': false },
+                                "อังคาร": { '1': false, '2': false },
+                                "พุธ": { '1': false, '2': false },
+                                "พฤหัส": { '1': false, '2': false },
+                                "ศุกร์": { '1': false, '2': false }
+                            }
+                        };
+                    }
+
+                    if (groupedData[locId].departments[deptId].schedules[day]) {
+                        groupedData[locId].departments[deptId].schedules[day][shift] = true;
+                    }
                 });
 
                 let html = "";
                 const days = ["จันทร์", "อังคาร", "พุธ", "พฤหัส", "ศุกร์"];
 
                 const shiftConfig = {
-                    '1': { label: '08:00 - 12:00', icon: '<i class="fa-regular fa-sun"></i>', cssClass: 'morning' },
-                    '2': { label: '13:00 - 16:00', icon: '<i class="fa-solid fa-cloud-sun"></i>', cssClass: 'afternoon' }
+                    '1': { label: '08:00 - 12:00', cssClass: 'morning' },
+                    '2': { label: '13:00 - 16:00', cssClass: 'afternoon' }
                 };
 
-                if (depts.length === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#888;">ไม่พบข้อมูลแผนก</td></tr>`;
-                    return;
+                for (const locId in groupedData) {
+                    const location = groupedData[locId];
+
+                    html += `<tr style="background-color: #fdfdfd;">
+                                <td class="dept-cell location-empty-cell"></td>
+                                <td colspan="5" style="text-align: center; font-weight: bold; color: var(--white);background: var(--primary); padding: 10px; font-size: 1.1rem; border-bottom: 2px solid #f0f4f8;">
+                                    <i class="fa-solid fa-location-dot"></i> ${location.name}
+                                </td>
+                             </tr>`;
+
+                    for (const deptId in location.departments) {
+                        const dept = location.departments[deptId];
+
+                        html += `<tr>`;
+                        // นำไอคอนกลับมาแสดงในช่องแผนก
+                        html += `<td rowspan="2" class="dept-cell" style="vertical-align: middle;">
+                                    <div style="display:flex; align-items:center;">
+                                        <div class="dept-icon-wrapper"><i class="fa-solid ${dept.icon}"></i></div>
+                                        ${dept.name}
+                                    </div>
+                                 </td>`;
+
+                        days.forEach(day => {
+                            html += `<td>`;
+                            if (dept.schedules[day]['1']) {
+                                const cfg = shiftConfig['1'];
+                                // นำ cfg.icon ออก
+                                html += `<div class="time-badge ${cfg.cssClass}">${cfg.label}</div>`;
+                            }
+                            html += `</td>`;
+                        });
+                        html += `</tr>`;
+
+                        html += `<tr class="afternoon-row">`;
+                        days.forEach(day => {
+                            html += `<td>`;
+                            if (dept.schedules[day]['2']) {
+                                const cfg = shiftConfig['2'];
+                                // นำ cfg.icon ออก
+                                html += `<div class="time-badge ${cfg.cssClass}">${cfg.label}</div>`;
+                            }
+                            html += `</td>`;
+                        });
+                        html += `</tr>`;
+                    }
                 }
 
-                depts.forEach(dData => {
-                    const dId = dData.id;
-
-                    html += `<tr>`;
-                    html += `<td>
-                                <div style="display:flex; align-items:center;">
-                                    <div class="dept-icon-wrapper"><i class="fa-solid ${dData.icon || 'fa-hospital'}"></i></div>
-                                    ${dData.name}
-                                </div>
-                             </td>`;
-
-                    days.forEach(day => {
-                        const activeShifts = scheduleMap[dId]?.[day] || [];
-                        html += `<td>`;
-
-                        if (activeShifts.length > 0) {
-                            activeShifts.sort();
-                            activeShifts.forEach(shift => {
-                                const cfg = shiftConfig[shift] || { label: shift, icon: '', cssClass: '' };
-                                html += `<div class="time-badge ${cfg.cssClass}">
-                                            ${cfg.icon} ${cfg.label}
-                                         </div>`;
-                            });
-                        } else {
-                            html += `<span class="inactive-dash">-</span>`;
-                        }
-                        html += `</td>`;
-                    });
-
-                    html += `</tr>`;
-                });
+                if (html === "") {
+                    html = `<tr><td colspan="6" style="text-align:center; color:#888;">ไม่พบข้อมูลตารางเวร</td></tr>`;
+                }
 
                 tableBody.innerHTML = html;
 

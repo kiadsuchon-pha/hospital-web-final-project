@@ -14,7 +14,11 @@
 <body>
 
     <nav class="top-navbar">
-        <div class="brand"><i class="fa-solid fa-user-shield"></i> Admin Panel</div>
+        <div class="brand">
+            <i class="fa-solid fa-bars" id="mobileMenuBtn"
+                style="display: none; cursor: pointer; margin-right: 15px;"></i>
+            <i class="fa-solid fa-user-shield"></i> Admin Panel
+        </div>
         <div class="top-menu">
             <div class="top-item active" onclick="switchCategory('data', this)"><i class="fa-solid fa-database"></i>
                 จัดการข้อมูล (Data)</div>
@@ -211,7 +215,6 @@
                             <option value="departments">แผนก (Departments)</option>
                             <option value="locations">ห้อง/สถานที่ (Locations)</option>
                             <option value="specialties">ความเชี่ยวชาญ (Specialties)</option>
-                            <option value="positions">ตำแหน่ง (Positions)</option>
                             <option value="prefixes_th">คำนำหน้าชื่อ (TH)</option>
                             <option value="prefixes_en">คำนำหน้าชื่อ (EN)</option>
                         </select>
@@ -382,6 +385,31 @@
 
 
     <script type="module" src="js/admin/admin.js"></script>
+    <SCript>
+        document.addEventListener('DOMContentLoaded', () => {
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const sidebarMenu = document.getElementById('sidebarMenu');
+
+            // เปิด/ปิด Sidebar
+            if (mobileMenuBtn && sidebarMenu) {
+                mobileMenuBtn.addEventListener('click', (e) => {
+                    e.stopPropagation(); // ป้องกัน event ทะลุ
+                    sidebarMenu.classList.toggle('active-mobile');
+                });
+            }
+
+            // กดพื้นที่อื่น (Main Content) แล้วปิด Sidebar อัตโนมัติ (เฉพาะในมือถือ)
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth <= 768) {
+                    if (sidebarMenu.classList.contains('active-mobile') &&
+                        !sidebarMenu.contains(e.target) &&
+                        e.target !== mobileMenuBtn) {
+                        sidebarMenu.classList.remove('active-mobile');
+                    }
+                }
+            });
+        });
+    </SCript>
 </body>
 
 </html>

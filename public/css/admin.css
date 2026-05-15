@@ -648,9 +648,12 @@ input[type="checkbox"] {
 }
 
 .btn-add-row {
-    background: #fdf5ff; /* เปลี่ยนพื้นหลังให้อมม่วงอ่อนๆ */
-    color: var(--primary); /* ใช้ตัวแปรสีม่วง */
-    border: 1px dashed var(--primary); /* ใช้ตัวแปรสีม่วง */
+    background: #fdf5ff;
+    /* เปลี่ยนพื้นหลังให้อมม่วงอ่อนๆ */
+    color: var(--primary);
+    /* ใช้ตัวแปรสีม่วง */
+    border: 1px dashed var(--primary);
+    /* ใช้ตัวแปรสีม่วง */
     width: 100%;
     padding: 8px;
     border-radius: 6px;
@@ -660,7 +663,8 @@ input[type="checkbox"] {
 }
 
 .btn-add-row:hover {
-    background: #f4e1fc; /* ปรับสีเมื่อ hover ให้เข้มขึ้นนิดหน่อย */
+    background: #f4e1fc;
+    /* ปรับสีเมื่อ hover ให้เข้มขึ้นนิดหน่อย */
 }
 
 /* Schedule Grid New Styles */
@@ -756,7 +760,7 @@ input:checked+.slider:before {
 /* Doctor Status */
 .doc-assigned {
     background: #fdf5ff;
-    color: var(--primary); 
+    color: var(--primary);
     padding: 5px;
     border-radius: 4px;
     font-size: 0.85rem;
@@ -891,4 +895,154 @@ input:checked+.slider:before {
     color: #333;
     margin: 5px 0 0 0;
     line-height: 1;
+}
+
+/* =========================================
+   RESPONSIVE WEB DESIGN (RWD)
+   ========================================= */
+
+/* สำหรับหน้าจอขนาดกลาง (Tablets) เช่น iPad */
+@media screen and (max-width: 992px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr);
+        /* แสดง 2 คอลัมน์ */
+    }
+
+    .filter-bar {
+        flex-wrap: wrap;
+        /* ยอมให้ช่องค้นหาปัดบรรทัดได้ */
+    }
+
+    .filter-group {
+        min-width: 45%;
+    }
+}
+
+/* สำหรับหน้าจอขนาดเล็ก (Mobile Phones) */
+@media screen and (max-width: 768px) {
+
+    /* --- Navbar Adjustments --- */
+    .top-navbar {
+        flex-wrap: wrap;
+        height: auto;
+        padding: 10px 15px;
+        gap: 10px;
+    }
+
+    .brand #mobileMenuBtn {
+        display: inline-block !important;
+        /* แสดงปุ่มแฮมเบอร์เกอร์ */
+    }
+
+    .top-menu {
+        margin-left: 0;
+        width: 100%;
+        overflow-x: auto;
+        /* เลื่อนซ้ายขวาได้ถ้าเมนูยาวไป */
+        padding-bottom: 5px;
+    }
+
+    .top-item {
+        white-space: nowrap;
+        font-size: 0.85rem;
+        padding: 6px 10px;
+    }
+
+    .user-profile {
+        width: 100%;
+        justify-content: space-between;
+        margin-top: 5px;
+    }
+
+    /* --- Sidebar Mobile Drawer --- */
+    .layout-container {
+        position: relative;
+    }
+
+    .sidebar {
+        position: absolute;
+        left: -100%;
+        /* ซ่อนไว้ทางซ้าย */
+        z-index: 999;
+        height: 100%;
+        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+        transition: left 0.3s ease;
+    }
+
+    .sidebar.active-mobile {
+        left: 0;
+        /* เลื่อนออกมาเมื่อกดปุ่ม */
+    }
+
+    /* --- Main Content Adjustments --- */
+    .main-content {
+        padding: 15px;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .action-bar {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        flex: 1;
+        /* ขยายปุ่มให้เต็มพื้นที่ */
+        justify-content: center;
+        font-size: 0.85rem;
+    }
+
+    /* --- Table Adjustments --- */
+    .table-container {
+        overflow-x: auto;
+        /* สำคัญมาก! ป้องกันตารางล้นจอ */
+    }
+
+    .table-container table {
+        min-width: 800px;
+        /* บังคับความกว้างขั้นต่ำ เพื่อให้เลื่อนดูได้ */
+    }
+
+    /* --- Filters & Cards --- */
+    .filter-bar {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .filter-group {
+        width: 100%;
+    }
+
+    .dashboard-welcome {
+        flex-direction: column;
+        text-align: center;
+        padding: 20px;
+    }
+
+    .welcome-icon {
+        display: none;
+        /* ซ่อนไอคอนกล่องข้อความต้อนรับเพื่อประหยัดพื้นที่ */
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        /* แสดงแถวละ 1 กล่อง */
+    }
+
+    /* --- Modals --- */
+    .modal-content {
+        width: 95%;
+        padding: 20px;
+    }
+
+    /* --- Grid Editor (ตารางเวร) --- */
+    .grid-table td:first-child {
+        width: 120px;
+        /* ลดความกว้างคอลัมน์ซ้ายสุด */
+    }
 }

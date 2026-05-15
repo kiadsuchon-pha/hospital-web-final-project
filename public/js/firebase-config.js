@@ -1,10 +1,7 @@
-// ไฟล์: firebase-config.js
-
-// 1. นำเข้า Firebase SDK
+// 1. นำเข้า Firebase SDK (เปลี่ยนจาก getFirestore เป็น initializeFirestore)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { initializeFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"; // เปลี่ยนบรรทัดนี้
 
-// 2. ค่า Config ของคุณ
 const firebaseConfig = {
   apiKey: "AIzaSyDZmBs0xzB0Ji5QE1ZnPb--VQobzhE15Z0",
   authDomain: "hospital-web-82f02.firebaseapp.com",
@@ -15,9 +12,11 @@ const firebaseConfig = {
   measurementId: "G-KQYXZS2JQN"
 };
 
-// 3. เริ่มต้นระบบ Firebase
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 
-// 4. ส่งออกตัวแปร db ให้ไฟล์อื่นเรียกใช้ได้
+// 🌟 2. ใช้ initializeFirestore เพื่อบังคับเปิด Long Polling ป้องกันปัญหา Network Block
+const db = initializeFirestore(app, {
+    experimentalForceLongPolling: true
+});
+
 export { db };
