@@ -9,6 +9,7 @@ import { SHIFTS } from "./config.js";
 window.currentScheduleMode = 'grid';
 let currentAssignTarget = null;
 
+// --- เปลี่ยนมุมมองระหว่างแบบ Grid (ตารางใหญ่) กับแบบ List (รายการแถวลงมา) ---
 window.switchScheduleMode = (mode, btn) => {
     window.currentScheduleMode = mode;
     document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
@@ -23,6 +24,7 @@ window.switchScheduleMode = (mode, btn) => {
     }
 }
 
+// --- โหลด Dropdown สำหรับกรองแผนกในหน้าจัดเวร ---
 window.loadScheduleFilterOptions = async function () {
     const gridDept = document.getElementById('schedFilterDept'), listDept = document.getElementById('listFilterDept');
     const snap = await getDocs(collection(db, "departments"));
@@ -34,6 +36,7 @@ window.loadScheduleFilterOptions = async function () {
 let globalStaticData = null; 
 let currentScheduleLoadId = 0;
 
+// --- โหลดข้อมูลกะที่เปิดอยู่และแพทย์ที่เข้าเวร มาวาดเป็นตาราง Grid วันจันทร์-ศุกร์ ---
 window.loadScheduleManager = async () => {
     const gridBody = document.getElementById('gridBody');
     if (!gridBody) return;
@@ -154,6 +157,7 @@ window.loadScheduleManager = async () => {
     }
 }
 
+// --- ดึงข้อมูลเวรมาแสดงผลในรูปแบบตารางธรรมดา (List view) เรียงตามวันจันทร์-ศุกร์ ---
 window.loadScheduleList = async () => {
     const tbody = document.getElementById('schedListBody');
     if (!tbody) return;
@@ -180,6 +184,7 @@ window.loadScheduleList = async () => {
     }).join('');
 }
 
+// --- คำนวณและสุ่มจัดเวรแพทย์อัตโนมัติลงในกะที่ยังว่างอยู่ โดยเช็คไม่ให้แพทย์ลงเวรซ้อนเวลาเดียวกัน ---
 window.autoAssignSchedules = async () => {
     if (!confirm("✨ จัดเวรอัตโนมัติในช่องที่ว่างหรือไม่? (จะไม่ทับแพทย์ที่จัดไว้แล้ว)")) return;
     try {
@@ -229,6 +234,7 @@ window.autoAssignSchedules = async () => {
     } catch (e) { alert(e.message); }
 }
 
+// --- ลบแพทย์ออกจากตารางทั้งหมด ---
 window.clearAllSchedules = async () => {
     if (!confirm("⚠️ ลบรายชื่อแพทย์ทั้งหมดในตาราง?")) return;
     const snap = await getDocs(collection(db, "doctor_schedules"));
@@ -238,6 +244,7 @@ window.clearAllSchedules = async () => {
     window.loadScheduleManager();
 }
 
+// --- ปิดตารางทั้งหมด (ล้างกระดานและห้องตรวจ) ---
 window.clearAllOpdSchedules = async () => {
     if (!confirm("🚨 ปิดทุกห้องและล้างตารางทั้งหมด?")) return;
     const [o, s] = await Promise.all([getDocs(collection(db, "opd_schedules")), getDocs(collection(db, "doctor_schedules"))]);
@@ -247,6 +254,7 @@ window.clearAllOpdSchedules = async () => {
     window.loadScheduleManager();
 }
 
+// --- เมื่อกดสวิตช์ในหน้า Grid จะเปิดหน้าต่างให้เลือกห้อง (ถ้าเปิดกะ) หรือลบกะทิ้ง (ถ้าปิด) ---
 window.toggleOpdMaster = async (checkbox, deptId, deptName, day, shift) => {
     if (checkbox.checked) {
         checkbox.checked = false;
@@ -273,6 +281,7 @@ window.toggleOpdMaster = async (checkbox, deptId, deptName, day, shift) => {
     }
 }
 
+// --- บันทึกการเปิดกะ/ห้องตรวจ ---
 window.confirmOpenShift = async () => {
     const locSelect = document.getElementById('openShiftLocation');
     const locId = locSelect.value;
@@ -286,6 +295,7 @@ window.confirmOpenShift = async () => {
     window.closeOpenShiftModal(); window.loadScheduleManager();
 }
 
+// --- เปิดหน้าต่าง Modal สำหรับเปลี่ยนสถานที่ของกะหลังจากเปิดแล้วได้ ---
 window.openChangeRoomModal = async (opdId, deptId, deptName, day, shift, currentLocId) => {
     currentAssignTarget = { opdId, deptId, day, shift, deptName };
     document.getElementById('openShiftModal').style.display = 'flex';
@@ -303,6 +313,7 @@ window.openChangeRoomModal = async (opdId, deptId, deptName, day, shift, current
     document.getElementById('openShiftLocation').innerHTML = options;
 }
 
+// --- ยืนยันการบันทึกเปลี่ยนห้องตรวจ ---
 window.confirmChangeRoom = async () => {
     const locSelect = document.getElementById('openShiftLocation');
     const locId = locSelect.value;
@@ -325,6 +336,7 @@ window.confirmChangeRoom = async () => {
 }
 
 // 🌟 อัปเดตตอนแสดงหมอให้กดเลือก (กรองเฉพาะหมอที่มีชื่อในแผนกนั้นๆ)
+// --- ดึงรายชื่อแพทย์มาใส่ใน Modal เพื่อเลือกลงเวร ---
 window.openAssignModal = async (deptId, day, shift, deptName, masterLoc) => {
     currentAssignTarget = { deptId, day, shift, masterLoc, deptName };
     document.getElementById('assignModal').style.display = 'flex';
@@ -345,6 +357,7 @@ window.openAssignModal = async (deptId, day, shift, deptName, masterLoc) => {
     document.getElementById('assignLocation').innerHTML = locSnap.docs.map(d => `<option value="${d.id}" ${d.id === masterLoc ? 'selected' : ''}>${d.data().name}</option>`).join('');
 }
 
+// --- ยืนยันการจัดหมอลงเวร พร้อมป้องกันหมอลงเวรซ้ำเวลาเดียวกัน ---
 window.confirmAssignment = async () => {
     const docSelect = document.getElementById('assignDocSelect');
     const docId = docSelect.value;
@@ -363,6 +376,7 @@ window.confirmAssignment = async () => {
     document.getElementById('assignModal').style.display = 'none'; window.loadScheduleManager();
 }
 
+// --- ลบหมอออกจากเวร ---
 window.removeDoctor = async (id, docName = "แพทย์", deptName = "", day = "") => {
     if (confirm(`ลบ ${docName} ออกจากกะนี้?`)) {
         await deleteDoc(doc(db, "doctor_schedules", id));
@@ -371,5 +385,8 @@ window.removeDoctor = async (id, docName = "แพทย์", deptName = "", day
     }
 }
 
+// --- ปิดหน้าต่าง Pop-up จัดเวร ---
 window.closeAssignModal = () => document.getElementById('assignModal').style.display = 'none';
+
+// --- ปิดหน้าต่าง Pop-up เปิดกะ/ห้องตรวจ ---
 window.closeOpenShiftModal = () => document.getElementById('openShiftModal').style.display = 'none';

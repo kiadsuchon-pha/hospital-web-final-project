@@ -4,6 +4,7 @@
 
 import { menus } from "./config.js";
 
+// --- เช็คว่ามี Token / Session ไหม ถ้าไม่มีเด้งไปหน้าล็อกอิน ---
 const userAuthStr = sessionStorage.getItem('hospitalAdminAuth');
 if (!userAuthStr) {
     window.location.href = 'login.html';
@@ -11,11 +12,13 @@ if (!userAuthStr) {
 
 window.currentUser = JSON.parse(userAuthStr);
 
+// --- เคลียร์ Session เพื่อออกจากระบบ ---
 window.logout = () => {
     sessionStorage.removeItem('hospitalAdminAuth');
     window.location.href = 'login.html';
 };
 
+// --- ตรวจสอบ Role ของผู้ใช้ และกรองเอาเมนูที่ไม่มีสิทธิ์เข้าถึงออกไป รวมถึงเปลี่ยนชื่อโลโก้และข้อความต้อนรับ ---
 export function initAdminPanel() {
     const nameDisplay = document.getElementById('displayUserName');
     const roleDisplay = document.getElementById('displayUserRole');

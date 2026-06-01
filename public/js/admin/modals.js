@@ -9,6 +9,7 @@ import { schemas } from "./config.js";
 
 const storage = getStorage();
 
+// --- ดึงข้อมูลความเชี่ยวชาญมาทำ Cache ---
 let specialtiesOptionsCache = ""; 
 async function fetchSpecialtiesOptions() {
     if (specialtiesOptionsCache) return specialtiesOptionsCache;
@@ -19,6 +20,7 @@ async function fetchSpecialtiesOptions() {
     return options;
 }
 
+// --- สร้าง Select ความเชี่ยวชาญแถวใหม่แบบไดนามิก ---
 window.addSpecialtyRow = async (containerId, selectedValue = "") => {
     const container = document.getElementById(containerId);
     if(!container) return;
@@ -32,6 +34,7 @@ window.addSpecialtyRow = async (containerId, selectedValue = "") => {
 }
 
 // 🌟 เพิ่มฟังก์ชันสำหรับดึงข้อมูลแผนกหลายอัน
+// --- ดึงข้อมูลแผนกมาทำ Cache ---
 let deptOptionsCache = ""; 
 async function fetchDeptOptions() {
     if (deptOptionsCache) return deptOptionsCache;
@@ -42,6 +45,7 @@ async function fetchDeptOptions() {
     return options;
 }
 
+// --- สร้าง Select แผนกแถวใหม่แบบไดนามิก ---
 window.addDeptRow = async (containerId, selectedValue = "") => {
     const container = document.getElementById(containerId);
     if(!container) return;
@@ -54,6 +58,7 @@ window.addDeptRow = async (containerId, selectedValue = "") => {
     container.appendChild(div);
 }
 
+// --- สร้าง Input Text แถวใหม่แบบไดนามิก ---
 window.addDynamicTextRow = (containerId, fieldName, placeholder, value = "") => {
     const container = document.getElementById(containerId);
     if(!container) return;
@@ -64,6 +69,7 @@ window.addDynamicTextRow = (containerId, fieldName, placeholder, value = "") => 
     container.appendChild(div);
 }
 
+// --- สร้างหน้าฟอร์มเพิ่ม/แก้ไขข้อมูลขึ้นมาแบบอัตโนมัติ โดยอ่านจาก config.js ว่าต้องการ input ชนิดใด ---
 window.openModal = async (mode, data = {}) => {
     window.currentFormMode = mode; 
     const schema = schemas[window.currentCollection];
@@ -165,15 +171,20 @@ window.openModal = async (mode, data = {}) => {
     document.getElementById('dataModal').style.display = 'flex';
 }
 
+// --- พรีวิวรูปก่อนอัปโหลด ---
 window.previewImage = function(event) {
     const reader = new FileReader();
     reader.onload = () => { const out = document.getElementById('imagePreview'); out.src = reader.result; out.style.display = 'block'; };
     if(event.target.files[0]) reader.readAsDataURL(event.target.files[0]);
 }
 
+// --- ปิดหน้าต่าง Pop-up ---
 window.closeModal = () => document.getElementById('dataModal').style.display = 'none';
+
+// --- เตรียมข้อมูลดึงจาก Firestore มาใส่หน้าต่างเพื่อกดแก้ไข ---
 window.prepareEdit = async (id) => { const s = await getDoc(doc(db, window.currentCollection, id)); if (s.exists()) window.openModal('edit', { ...s.data(), id: s.id }); }
 
+// --- รวบรวมข้อมูลทั้งหมดที่ผู้ใช้กรอกในฟอร์ม อัปโหลดรูป (ถ้ามี) และบันทึกลง Firestore ---
 document.getElementById('dataForm').onsubmit = async (e) => {
     e.preventDefault();
     const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -232,6 +243,7 @@ document.getElementById('dataForm').onsubmit = async (e) => {
     }
 }
 
+// --- แสดงคู่มือการวางไฟล์ JSON เพื่อนำเข้าฐานข้อมูล ---
 window.updateInstruction = () => {
     const coll = document.getElementById('importCollection')?.value;
     const guide = document.getElementById('formatGuide');
@@ -244,12 +256,14 @@ window.updateInstruction = () => {
     else guide.innerHTML = `<li>id, name</li>`;
 }
 
+// --- อ่านเนื้อหาไฟล์ JSON ที่ผู้ใช้เลือกมาแสดงใน Textarea ---
 window.handleFile = (input) => {
     const r = new FileReader();
     r.onload = e => document.getElementById('jsonText').value = e.target.result;
     r.readAsText(input.files[0]);
 }
 
+// --- นำเข้าข้อมูลทีละก้อนลงฐานข้อมูลจาก JSON ---
 window.processImport = async () => {
     const dataText = document.getElementById('jsonText').value;
     if (!dataText) return alert("กรุณาใส่ JSON");

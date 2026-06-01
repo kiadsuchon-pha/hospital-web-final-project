@@ -5,7 +5,7 @@
 import { collection, addDoc, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { db } from "../firebase-config.js";
 
-// 👇 เพิ่มพารามิเตอร์ category (data, schedule, system)
+// --- บันทึกประวัติการกระทำของผู้ใช้งาน ส่งขึ้น Firestore พร้อมระบุหมวดหมู่ ---
 window.saveLog = async (action, details, category = 'data') => {
     try {
         if (!window.currentUser) return;
@@ -20,7 +20,7 @@ window.saveLog = async (action, details, category = 'data') => {
     } catch (e) { console.error("Log error:", e); }
 };
 
-// 👇 รับค่า category เพื่อแสดงผลเฉพาะหน้าที่เลือก
+// --- ดึงประวัติการทำงานตามหมวดหมู่ (category) นำมาแสดงผลในตาราง และเปลี่ยนสีกรอบข้อความตามประเภท ---
 window.loadLogs = async (category) => {
     // เปลี่ยนชื่อหัวข้อตามหมวดหมู่
     const titles = {
