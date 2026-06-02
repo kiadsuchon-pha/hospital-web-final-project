@@ -42,6 +42,23 @@
             </a>
         </div>
 
+        <div class="filter-section">
+            <select id="filterDay" class="form-control">
+                <option value="">-- ทุกวัน --</option>
+                <option value="จันทร์">จันทร์</option>
+                <option value="อังคาร">อังคาร</option>
+                <option value="พุธ">พุธ</option>
+                <option value="พฤหัส">พฤหัส</option>
+                <option value="ศุกร์">ศุกร์</option>
+            </select>
+            <select id="filterDepartment" class="form-control">
+                <option value="">-- ทุกแผนก --</option>
+            </select>
+            <select id="filterLocation" class="form-control">
+                <option value="">-- ทุกสถานที่ --</option>
+            </select>
+        </div>
+
         <div class="table-responsive">
             <table class="opd-table">
                 <thead>
@@ -68,11 +85,15 @@
         import { collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { db } from "./js/firebase-config.js";
 
+        // ตัวแปรส่วนกลางเก็บข้อมูลทั้งหมดเพื่อกรองแบบ Real-time
+        let allGroupedData = {}; 
+
         window.onload = loadOPDSchedule;
 
         async function loadOPDSchedule() {
             const tableBody = document.getElementById('opdTableBody');
 
+            // 1. ดึงข้อมูลบันทึกการแก้ไขล่าสุด (Audit Log)
             try {
                 const logQ = query(collection(db, "audit_logs"), orderBy("timestamp", "desc"), limit(1));
                 const logSnap = await getDocs(logQ);
@@ -86,6 +107,7 @@
                 console.error("ไม่สามารถดึงเวลาอัปเดตล่าสุดได้:", logError);
             }
 
+            // 2. ดึงข้อมูล Departments, OPD Schedules, และ Locations จาก Firestore
             try {
                 const [deptSnap, opdSnap, locSnap] = await Promise.all([
                     getDocs(collection(db, "departments")),
@@ -94,12 +116,18 @@
                 ]);
 
                 const locsMap = {};
-                locSnap.forEach(doc => locsMap[doc.id] = doc.data().name);
+                const filterLoc = document.getElementById('filterLocation');
+                locSnap.forEach(doc => {
+                    locsMap[doc.id] = doc.data().name;
+                    filterLoc.add(new Option(doc.data().name, doc.id)); // เพิ่มรายชื่อลง Dropdown ตัวกรอง
+                });
 
                 let deptsMap = {};
+                const filterDept = document.getElementById('filterDepartment');
                 deptSnap.forEach(doc => {
                     if (doc.data().is_active !== false) {
                         deptsMap[doc.id] = doc.data();
+                        filterDept.add(new Option(doc.data().name, doc.id)); // เพิ่มรายชื่อลง Dropdown ตัวกรอง
                     }
                 });
 
@@ -147,71 +175,103 @@
                     }
                 });
 
-                let html = "";
-                const days = ["จันทร์", "อังคาร", "พุธ", "พฤหัส", "ศุกร์"];
+                allGroupedData = groupedData;
 
-                const shiftConfig = {
-                    '1': { label: '08:00 - 12:00', cssClass: 'morning' },
-                    '2': { label: '13:00 - 16:00', cssClass: 'afternoon' }
-                };
+                // ผูก Event Listeners สำหรับดักจับการเปลี่ยนแปลงตัวกรอง
+                document.getElementById('filterLocation').addEventListener('change', renderFilteredTable);
+                document.getElementById('filterDepartment').addEventListener('change', renderFilteredTable);
+                document.getElementById('filterDay').addEventListener('change', renderFilteredTable);
 
-                for (const locId in groupedData) {
-                    const location = groupedData[locId];
+                // แสดงตารางข้อมูลรอบแรก
+                renderFilteredTable();
 
+            } catch (error) {
+                console.error("Error loading schedule:", error);
+                tableBody.innerHTML = `<tr><td colspan="6" style="color:red; text-align:center;">โหลดข้อมูลไม่สำเร็จ</td></tr>`;
+            }
+        }
+
+        // ฟังก์ชัน Render ตารางหลังผ่านเงื่อนไข Filter
+        function renderFilteredTable() {
+            const selLoc = document.getElementById('filterLocation').value;
+            const selDept = document.getElementById('filterDepartment').value;
+            const selDay = document.getElementById('filterDay').value;
+            
+            const tableBody = document.getElementById('opdTableBody');
+            let html = "";
+            const days = ["จันทร์", "อังคาร", "พุธ", "พฤหัส", "ศุกร์"];
+
+            const shiftConfig = {
+                '1': { label: '08:00 - 12:00', cssClass: 'morning' },
+                '2': { label: '13:00 - 16:00', cssClass: 'afternoon' }
+            };
+
+            for (const locId in allGroupedData) {
+                if (selLoc && locId !== selLoc) continue; // กรองสถานที่
+
+                const location = allGroupedData[locId];
+                let locationHtml = "";
+                let deptCount = 0;
+
+                for (const deptId in location.departments) {
+                    if (selDept && deptId !== selDept) continue; // กรองแผนก
+
+                    const dept = location.departments[deptId];
+
+                    if (selDay) { // กรองวันทำงานของแผนก
+                        if (!dept.schedules[selDay]['1'] && !dept.schedules[selDay]['2']) continue;
+                    }
+
+                    deptCount++;
+                    locationHtml += `<tr>`;
+                    locationHtml += `<td rowspan="2" class="dept-cell" style="vertical-align: middle;">
+                                        <div style="display:flex; align-items:center;">
+                                            <div class="dept-icon-wrapper"><i class="fa-solid ${dept.icon}"></i></div>
+                                            ${dept.name}
+                                        </div>
+                                     </td>`;
+
+                    // คอลัมน์ช่วงเช้า (Shift 1)
+                    days.forEach(day => {
+                        locationHtml += `<td>`;
+                        if ((!selDay || selDay === day) && dept.schedules[day]['1']) {
+                            const cfg = shiftConfig['1'];
+                            locationHtml += `<div class="time-badge ${cfg.cssClass}">${cfg.label}</div>`;
+                        }
+                        locationHtml += `</td>`;
+                    });
+                    locationHtml += `</tr>`;
+
+                    // คอลัมน์ช่วงบ่าย (Shift 2)
+                    locationHtml += `<tr class="afternoon-row">`;
+                    days.forEach(day => {
+                        locationHtml += `<td>`;
+                        if ((!selDay || selDay === day) && dept.schedules[day]['2']) {
+                            const cfg = shiftConfig['2'];
+                            locationHtml += `<div class="time-badge ${cfg.cssClass}">${cfg.label}</div>`;
+                        }
+                        locationHtml += `</td>`;
+                    });
+                    locationHtml += `</tr>`;
+                }
+
+                // แปะชื่อหัวข้อสถานที่ถ้ามีข้อมูลแผนกข้างในหลงเหลืออยู่หลังกรอง
+                if (deptCount > 0) {
                     html += `<tr style="background-color: #fdfdfd;">
                                 <td class="dept-cell location-empty-cell"></td>
                                 <td colspan="5" style="text-align: center; font-weight: bold; color: var(--white);background: var(--primary); padding: 10px; font-size: 1.1rem; border-bottom: 2px solid #f0f4f8;">
                                     <i class="fa-solid fa-location-dot"></i> ${location.name}
                                 </td>
                              </tr>`;
-
-                    for (const deptId in location.departments) {
-                        const dept = location.departments[deptId];
-
-                        html += `<tr>`;
-                        // นำไอคอนกลับมาแสดงในช่องแผนก
-                        html += `<td rowspan="2" class="dept-cell" style="vertical-align: middle;">
-                                    <div style="display:flex; align-items:center;">
-                                        <div class="dept-icon-wrapper"><i class="fa-solid ${dept.icon}"></i></div>
-                                        ${dept.name}
-                                    </div>
-                                 </td>`;
-
-                        days.forEach(day => {
-                            html += `<td>`;
-                            if (dept.schedules[day]['1']) {
-                                const cfg = shiftConfig['1'];
-                                // นำ cfg.icon ออก
-                                html += `<div class="time-badge ${cfg.cssClass}">${cfg.label}</div>`;
-                            }
-                            html += `</td>`;
-                        });
-                        html += `</tr>`;
-
-                        html += `<tr class="afternoon-row">`;
-                        days.forEach(day => {
-                            html += `<td>`;
-                            if (dept.schedules[day]['2']) {
-                                const cfg = shiftConfig['2'];
-                                // นำ cfg.icon ออก
-                                html += `<div class="time-badge ${cfg.cssClass}">${cfg.label}</div>`;
-                            }
-                            html += `</td>`;
-                        });
-                        html += `</tr>`;
-                    }
+                    html += locationHtml;
                 }
-
-                if (html === "") {
-                    html = `<tr><td colspan="6" style="text-align:center; color:#888;">ไม่พบข้อมูลตารางเวร</td></tr>`;
-                }
-
-                tableBody.innerHTML = html;
-
-            } catch (error) {
-                console.error("Error loading schedule:", error);
-                tableBody.innerHTML = `<tr><td colspan="6" style="color:red; text-align:center;">โหลดข้อมูลไม่สำเร็จ</td></tr>`;
             }
+
+            if (html === "") {
+                html = `<tr><td colspan="6" style="text-align:center; padding:50px; color:#888;">ไม่พบข้อมูลตารางเวรที่ตรงกับเงื่อนไข</td></tr>`;
+            }
+
+            tableBody.innerHTML = html;
         }
     </script>
 
