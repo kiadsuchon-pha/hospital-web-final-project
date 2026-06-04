@@ -1,0 +1,230 @@
+html {
+    scroll-behavior: smooth;
+}
+
+:root {
+    --primary: #9F28E3;
+    --secondary: #00cc99;
+    --text-dark: #333;
+    --white: #FEFEFE;
+}
+
+body {
+    margin: 0;
+    font-family: 'Sarabun', sans-serif;
+    background: #f4f6f9;
+    color: var(--text-dark);
+}
+
+.logo,
+.header-text h1,
+.doc-name {
+    color: var(--primary);
+}
+
+.nav-links a:hover,
+.doc-name:hover {
+    color: #861ebf;
+}
+
+nav {
+    background: white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+nav .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.nav-links a {
+    color: #333;
+    text-decoration: none;
+    margin-left: 30px;
+    font-weight: 500;
+    transition: 0.3s;
+}
+
+.page-container {
+    max-width: 1150px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.header-section {
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.header-text h1 {
+    margin: 0 0 5px 0;
+    font-size: 1.8rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.header-text p {
+    color: #666;
+    margin: 0;
+}
+
+.btn-opd {
+    text-decoration: none;
+    background: white;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-weight: bold;
+    transition: 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-opd:hover {
+    background: var(--primary);
+    color: var(--white);
+    box-shadow: 0 4px 10px rgba(159, 40, 227, 0.2);
+    transform: translateY(-2px);
+}
+
+/* --- กล่องค้นหาแพทย์ --- */
+.filter-box {
+    background: white;
+    padding: 20px 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    margin-bottom: 30px;
+}
+
+.filter-item label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #555;
+    font-size: 0.95rem;
+}
+
+.filter-item select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-family: 'Sarabun', sans-serif;
+    font-size: 1rem;
+    color: #333;
+    outline: none;
+    transition: 0.2s;
+}
+
+.filter-item select:focus {
+    border-color: var(--primary);
+}
+
+/* --- ส่วนของตารางแบบใหม่ คลีนๆ สบายตา --- */
+.table-responsive {
+    overflow-x: auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.schedule-matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px;
+    table-layout: fixed;
+}
+
+.schedule-matrix-table th {
+    background: var(--primary);
+    color: var(--white); 
+    padding: 15px;
+    text-align: center;
+    font-weight: bold;
+    border-bottom: none;
+    /* 🌟 เพิ่มเส้นแบ่งแนวตั้งในหัวตาราง (ใช้สีขาวโปร่งใสเพื่อให้เข้ากับพื้นหลังม่วง) */
+    border-right: 1px solid rgba(255, 255, 255, 0.25);
+    font-size: 1.05rem;
+}
+
+/* เอาเส้นแบ่งขวาสุดของตารางออก */
+.schedule-matrix-table th:last-child {
+    border-right: none;
+}
+
+.schedule-matrix-table td {
+    background: #ffffff; /* 🌟 พื้นหลังสีเทาจาง */
+    border-bottom: 2px solid #f4f6f9; /* 🌟 เส้นแบ่งแนวนอนสีขาว */
+    border-right: 2px solid #f4f6f9; /* 🌟 เส้นแบ่งแนวตั้งสีขาว */
+    padding: 15px 20px;
+    text-align: left; 
+    vertical-align: top; 
+    height: 120px; 
+}
+
+/* เอาเส้นแบ่งขวาสุดของตารางออก */
+.schedule-matrix-table td:last-child {
+    border-right: none;
+}
+
+/* สไตล์คอลัมน์ซ้ายสุด (ช่วงเวลา) */
+.schedule-matrix-table td.time-col {
+    background: #ffffff; /* ให้ช่องเวลาเป็นสีขาวเพื่อให้ดูมีมิติแยกจากข้อมูล */
+    border-right: 2px solid #f4f6f9; 
+    padding-left: 25px;
+}
+
+.shift-title {
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: #333;
+}
+
+.shift-time {
+    font-size: 0.85rem;
+    color: #777;
+    margin-top: 4px;
+}
+
+/* สไตล์ป้ายชื่อแผนก (ก้อนสีม่วงอ่อน) */
+.dept-badge {
+    background: #fdf5ff;
+    color: #b024ff;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: inline-block;
+    margin-bottom: 8px;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+/* สไตล์ข้อความระบุสถานที่ */
+.loc-text {
+    font-size: 0.85rem;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 4px;
+}
