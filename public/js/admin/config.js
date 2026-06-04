@@ -1,5 +1,5 @@
 // ==========================================
-// ไฟล์: js/admin/config.js (ฉบับแก้ไข)
+// ไฟล์: js/admin/config.js
 // ==========================================
 
 // --- กำหนดช่วงเวลา กะเช้า/กะบ่าย ---
@@ -71,13 +71,14 @@ export const menus = {
         { id: 'locations', name: 'ห้อง/สถานที่', icon: 'fa-map-location-dot' },
         { type: 'header', title: 'ข้อมูลพื้นฐาน' },
         { id: 'specialties', name: 'ความเชี่ยวชาญ', icon: 'fa-star' },
-        // ❌ จัดการตำแหน่ง ถูกนำออกแล้ว
         { id: 'prefixes_th', name: 'คำนำหน้าชื่อ (TH)', icon: 'fa-heading' },
         { id: 'prefixes_en', name: 'คำนำหน้าชื่อ (EN)', icon: 'fa-font' }
     ],
     tools: [
         { type: 'header', title: 'การจัดการเวลา' },
-        { id: 'scheduleManager', name: 'จัดการตารางเวรแพทย์', icon: 'fa-calendar-days' }
+        { id: 'schedule_current', name: 'การจัดตารางปัจจุบัน', icon: 'fa-table-cells' },
+        { id: 'schedule_next', name: 'การจัดตารางสัปดาห์ถัดไป', icon: 'fa-calendar-plus' },
+        { id: 'shift_summary', name: 'สรุปจำนวนเวรแพทย์', icon: 'fa-user-clock' } // เมนูใหม่
     ],
     system: [
         { type: 'header', title: 'การจัดการระบบ' },

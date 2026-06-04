@@ -38,17 +38,6 @@
 
         <div class="filter-box">
             <div class="filter-item">
-                <label><i class="fa-regular fa-calendar"></i> เลือกวัน</label>
-                <select id="dayFilter" onchange="filterSchedule()">
-                    <option value="">-- แสดงทุกวัน --</option>
-                    <option value="จันทร์">วันจันทร์</option>
-                    <option value="อังคาร">วันอังคาร</option>
-                    <option value="พุธ">วันพุธ</option>
-                    <option value="พฤหัส">วันพฤหัสบดี</option>
-                    <option value="ศุกร์">วันศุกร์</option>
-                </select>
-            </div>
-            <div class="filter-item">
                 <label><i class="fa-solid fa-hospital-user"></i> เลือกแผนก</label>
                 <select id="deptFilter" onchange="filterSchedule()">
                     <option value="">-- ทุกแผนก --</option>
@@ -64,16 +53,14 @@
             <table class="schedule-table">
                 <thead>
                     <tr>
-                        <th width="10%">วัน</th>
-                        <th width="20%">เวลา</th>
-                        <th width="25%">แพทย์</th>
-                        <th width="20%">แผนกที่ลงตรวจ</th>
-                        <th width="25%">สถานที่</th>
+                        <th width="10%">ลำดับ</th>
+                        <th width="45%">แพทย์</th>
+                        <th width="45%">แผนกที่ลงตรวจ</th>
                     </tr>
                 </thead>
                 <tbody id="scheduleBody">
                     <tr>
-                        <td colspan="5" style="text-align:center; padding:30px;">⏳ กำลังโหลดข้อมูล...</td>
+                        <td colspan="3" style="text-align:center; padding:30px;">⏳ กำลังโหลดข้อมูล...</td>
                     </tr>
                 </tbody>
             </table>
@@ -85,21 +72,18 @@
         import { db } from "./js/firebase-config.js";
 
         let allSchedules = [];
-        const SHIFTS = { '1': '08:00 - 12:00', '2': '13:00 - 16:00' };
 
         window.onload = async function () { await loadData(); };
 
         async function loadData() {
             try {
-                const [schSnap, docSnap, deptSnap, locSnap] = await Promise.all([
+                const [schSnap, docSnap, deptSnap] = await Promise.all([
                     getDocs(collection(db, "doctor_schedules")),
                     getDocs(collection(db, "doctors")),
-                    getDocs(collection(db, "departments")),
-                    getDocs(collection(db, "locations"))
+                    getDocs(collection(db, "departments"))
                 ]);
 
                 const docMap = {}; docSnap.forEach(d => docMap[d.id] = d.data());
-                const locMap = {}; locSnap.forEach(d => locMap[d.id] = d.data().name);
                 const deptMap = {}; const deptFilter = document.getElementById('deptFilter');
 
                 deptSnap.forEach(d => {
@@ -108,65 +92,63 @@
                     deptFilter.innerHTML += `<option value="${data.name}">${data.name}</option>`;
                 });
 
-                allSchedules = [];
+                const scheduleMap = {};
                 schSnap.forEach(s => {
                     const sch = s.data();
                     const doctor = docMap[sch.doc_id];
+                    const deptName = deptMap[sch.dept_id] || "-";
 
                     if (doctor) {
                         let fullName = doctor.name;
                         if (!fullName || fullName === 'undefined') fullName = `${doctor.pname || ''}${doctor.fname || ''} ${doctor.lname || ''}`.trim();
-                        const timeStr = SHIFTS[sch.shift] || sch.shift || '-';
-                        const locName = locMap[sch.location_id] || "-";
-
-                        allSchedules.push({
-                            day: sch.day,
-                            time: timeStr,
-                            docName: fullName,
-                            // 🌟 ตรงนี้สำคัญ: ดึงชื่อแผนกจากตารางเวร (sch.dept_id) แทนที่จะเป็นหมอคนเดียว
-                            deptName: deptMap[sch.dept_id] || "-",
-                            location: locName
-                        });
+                        const key = `${sch.doc_id}||${deptName}`;
+                        if (!scheduleMap[key]) {
+                            scheduleMap[key] = {
+                                docId: sch.doc_id,
+                                docName: fullName,
+                                deptName
+                            };
+                        }
                     }
                 });
 
+                allSchedules = Object.values(scheduleMap);
                 renderTable(allSchedules);
             } catch (error) {
                 console.error("Error:", error);
-                document.getElementById('scheduleBody').innerHTML = `<tr><td colspan="5" style="color:red; text-align:center;">โหลดข้อมูลไม่สำเร็จ</td></tr>`;
+                document.getElementById('scheduleBody').innerHTML = `<tr><td colspan="2" style="color:red; text-align:center;">โหลดข้อมูลไม่สำเร็จ</td></tr>`;
             }
         }
 
         window.renderTable = function (data) {
             const tbody = document.getElementById('scheduleBody');
-            if (data.length === 0) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px; color:#999;">ไม่พบข้อมูลตารางเวรตามเงื่อนไข</td></tr>`; return; }
+            if (data.length === 0) { tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:30px; color:#999;">ไม่พบข้อมูลตารางเวรตามเงื่อนไข</td></tr>`; return; }
 
-            const dayOrder = { "จันทร์": 1, "อังคาร": 2, "พุธ": 3, "พฤหัส": 4, "ศุกร์": 5 };
-            data.sort((a, b) => (dayOrder[a.day] || 99) - (dayOrder[b.day] || 99));
+            data.sort((a, b) => {
+                const deptCompare = a.deptName.localeCompare(b.deptName, 'th');
+                return deptCompare !== 0 ? deptCompare : a.docName.localeCompare(b.docName, 'th');
+            });
 
             let html = "";
-            data.forEach(item => {
+            data.forEach((item, index) => {
+                const doctorLink = item.docId ? `doctor-schedule-detail.html?id=${encodeURIComponent(item.docId)}` : '#';
                 html += `<tr>
-                    <td style="font-weight:bold; color:#555;">${item.day}</td>
-                    <td style="color:#9F28E3;">${item.time}</td>
-                    <td><a href="#" class="doc-name">${item.docName}</a></td>
+                    <td>${index + 1}</td>
+                    <td><a href="${doctorLink}" class="doc-name">${item.docName}</a></td>
                     <td><span class="dept-badge">${item.deptName}</span></td>
-                    <td>${item.location}</td>
                 </tr>`;
             });
             tbody.innerHTML = html;
         }
 
         window.filterSchedule = function () {
-            const dayVal = document.getElementById('dayFilter').value;
             const deptVal = document.getElementById('deptFilter').value;
             const nameVal = document.getElementById('nameSearch').value.toLowerCase();
 
             const filtered = allSchedules.filter(item => {
-                const matchDay = dayVal === "" || item.day === dayVal;
                 const matchDept = deptVal === "" || item.deptName === deptVal;
                 const matchName = item.docName.toLowerCase().includes(nameVal);
-                return matchDay && matchDept && matchName;
+                return matchDept && matchName;
             });
             renderTable(filtered);
         }

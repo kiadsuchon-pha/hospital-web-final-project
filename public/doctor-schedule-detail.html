@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ตารางแพทย์ออกตรวจรายบุคคล - HOSPITAL CARE</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style-doc-schedule.css">
+</head>
+
+<body>
+    <nav>
+        <div class="container">
+            <div class="logo"><i class="fa-solid fa-heart-pulse"></i> HOSPITAL CARE</div>
+            <div class="nav-links">
+                <a href="index.html">หน้าหลัก</a>
+                <a href="index.html#services">บริการ</a>
+                <a href="doctors.html">ค้นหาแพทย์</a>
+                <a href="opd-schedule.html">ตารางเวร</a>
+                <a href="doctor-schedule.html" style="font-weight: bold; color: var(--primary);">ตารางแพทย์รายบุคคล</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page-container">
+        <div class="header-section">
+            <div class="header-text">
+                <h1><i class="fa-solid fa-calendar-user"></i> ตารางแพทย์ออกตรวจ (รายบุคคล)</h1>
+                <p id="selectedDoctorText">เลือกแพทย์จากช่องค้นหาเพื่อดูตารางรายบุคคล</p>
+            </div>
+            <a href="doctor-schedule.html" class="btn-opd"><i class="fa-solid fa-list-ul"></i> กลับไปหน้าตารางแพทย์</a>
+        </div>
+
+        <div class="filter-box">
+            <div class="filter-item">
+                <label><i class="fa-solid fa-user-doctor"></i> เลือกแพทย์</label>
+                <select id="doctorSelect" onchange="window.loadDoctorSchedule(this.value)">
+                    <option value="">-- เลือกแพทย์ --</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="table-responsive" id="scheduleContainer" style="display:none;">
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th width="20%">วัน</th>
+                        <th width="20%">กะ/เวลา</th>
+                        <th width="30%">แผนก</th>
+                        <th width="30%">สถานที่</th>
+                    </tr>
+                </thead>
+                <tbody id="scheduleBody">
+                    <tr>
+                        <td colspan="4" style="text-align:center; padding:30px;">⏳ กำลังโหลดตาราง...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script type="module">
+        import { collection, getDocs, getDoc, doc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { db } from "./js/firebase-config.js";
+
+        let doctors = [];
+        let depts = {};
+        let locations = {};
+        let schedules = [];
+
+        const selectedDoctorText = document.getElementById('selectedDoctorText');
+        const scheduleContainer = document.getElementById('scheduleContainer');
+        const scheduleBody = document.getElementById('scheduleBody');
+        const doctorSelect = document.getElementById('doctorSelect');
+
+        window.onload = async function () {
+            await loadData();
+            const params = new URLSearchParams(window.location.search);
+            const doctorId = params.get('id');
+            if (doctorId) {
+                setDoctorSelectById(doctorId);
+                loadDoctorSchedule(doctorId);
+            }
+        };
+
+        async function loadData() {
+            const [docSnap, deptSnap, locSnap, schSnap] = await Promise.all([
+                getDocs(collection(db, "doctors")),
+                getDocs(collection(db, "departments")),
+                getDocs(collection(db, "locations")),
+                getDocs(collection(db, "doctor_schedules"))
+            ]);
+
+            const doctorItems = [];
+            docSnap.forEach(d => {
+                const doctor = d.data();
+                const fullName = getDoctorName(doctor);
+                doctorItems.push({ id: d.id, name: fullName, raw: doctor });
+            });
+
+            doctorItems.sort((a, b) => a.name.localeCompare(b.name, 'th'));
+            doctors = doctorItems;
+            doctorItems.forEach(d => {
+                const option = document.createElement('option');
+                option.value = d.id;
+                option.textContent = d.name;
+                doctorSelect.appendChild(option);
+            });
+
+            deptSnap.forEach(d => {
+                depts[d.id] = d.data().name;
+            });
+
+            locSnap.forEach(d => {
+                locations[d.id] = d.data().name;
+            });
+
+            schSnap.forEach(s => {
+                schedules.push({ id: s.id, ...s.data() });
+            });
+        }
+
+        function getDoctorName(doctor) {
+            if (doctor.name && doctor.name !== 'undefined') return doctor.name;
+            return `${doctor.pname || ''}${doctor.fname || ''} ${doctor.lname || ''}`.trim();
+        }
+
+        function setDoctorSelectById(doctorId) {
+            if (!doctorId) return;
+            const option = Array.from(doctorSelect.options).find(o => o.value === doctorId);
+            if (option) {
+                doctorSelect.value = doctorId;
+            }
+        }
+
+        window.loadDoctorSchedule = async function loadDoctorSchedule(doctorId) {
+            if (!doctorId) {
+                selectedDoctorText.innerText = 'เลือกแพทย์จากเมนูด้านบนเพื่อดูตาราง';
+                scheduleContainer.style.display = 'none';
+                doctorSelect.value = '';
+                return;
+            }
+
+            const doctor = doctors.find(d => d.id === doctorId);
+            if (!doctor) {
+                selectedDoctorText.innerText = 'ไม่พบข้อมูลแพทย์ กรุณาเลือกใหม่';
+                scheduleContainer.style.display = 'none';
+                doctorSelect.value = '';
+                return;
+            }
+
+            selectedDoctorText.innerHTML = `ตารางเวรของแพทย์: <strong>${doctor.name}</strong>`;
+            const docSchedules = schedules.filter(s => s.doc_id === doctorId);
+            if (docSchedules.length === 0) {
+                scheduleBody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:30px; color:#999;">ไม่พบตารางออกตรวจสำหรับแพทย์ท่านนี้</td></tr>`;
+                scheduleContainer.style.display = 'block';
+                return;
+            }
+
+            const SHIFTS = { '1': 'กะเช้า (08:00 - 12:00)', '2': 'กะบ่าย (13:00 - 16:00)' };
+            const dayOrder = { 'จันทร์': 1, 'อังคาร': 2, 'พุธ': 3, 'พฤหัส': 4, 'ศุกร์': 5, 'เสาร์': 6, 'อาทิตย์': 7 };
+
+            const scheduleRows = docSchedules
+                .map(s => ({
+                    day: s.day,
+                    shiftLabel: SHIFTS[s.shift] || s.shift,
+                    deptName: depts[s.dept_id] || 'ไม่ระบุแผนก',
+                    location: s.location_id ? (locations[s.location_id] || s.location_id) : 'ไม่ระบุสถานที่'
+                }))
+                .sort((a, b) => (dayOrder[a.day] || 99) - (dayOrder[b.day] || 99));
+
+            scheduleBody.innerHTML = scheduleRows.map(r => `
+                <tr>
+                    <td>${r.day}</td>
+                    <td>${r.shiftLabel}</td>
+                    <td>${r.deptName}</td>
+                    <td>${r.location}</td>
+                </tr>
+            `).join('');
+            scheduleContainer.style.display = 'block';
+            window.history.replaceState({}, '', `doctor-schedule-detail.html?id=${encodeURIComponent(doctorId)}`);
+        }
+    </script>
+</body>
+
+</html>

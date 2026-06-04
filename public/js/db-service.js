@@ -2,11 +2,60 @@
 import { doc, getDoc, getDocs, collection, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { db } from "./firebase-config.js";
 
+// 🚀 CACHING LAYER - ลดการโหลดซ้ำของข้อมูลคงที่
+const cache = {
+    departments: null,
+    doctors: null,
+    locations: null,
+    lastUpdateTime: 0
+};
+
+// ฟังก์ชันเช็คว่า cache ยังใหม่อยู่หรือไม่ (5 นาที = 300000ms)
+const isCacheValid = () => Date.now() - cache.lastUpdateTime < 300000;
+
 // --- ฟังก์ชันช่วยดึงข้อมูลตาม ID (Helper) ---
 async function getById(collectionName, id) {
     if (!id) return null;
     const snap = await getDoc(doc(db, collectionName, id));
     return snap.exists() ? snap.data() : null;
+}
+
+// 🚀 ฟังก์ชันดึงข้อมูล Static จาก Cache (เร็วมากสำหรับข้อมูลที่ไม่เปลี่ยน)
+export async function getCachedStaticData() {
+    // ถ้า cache ยังใหม่ ให้ส่งกลับทันที
+    if (cache.departments && cache.doctors && cache.locations && isCacheValid()) {
+        return {
+            departments: cache.departments,
+            doctors: cache.doctors,
+            locations: cache.locations
+        };
+    }
+    
+    // ถ้า cache หมดอายุ ให้ดึงมาใหม่แบบ Parallel
+    const [deptSnap, docSnap, locSnap] = await Promise.all([
+        getDocs(collection(db, "departments")),
+        getDocs(collection(db, "doctors")),
+        getDocs(collection(db, "locations"))
+    ]);
+    
+    cache.departments = deptSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    cache.doctors = docSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    cache.locations = locSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    cache.lastUpdateTime = Date.now();
+    
+    return {
+        departments: cache.departments,
+        doctors: cache.doctors,
+        locations: cache.locations
+    };
+}
+
+// 🚀 ฟังก์ชันเคลียร์ Cache เมื่อข้อมูลมีการเปลี่ยนแปลง
+export function clearCache() {
+    cache.departments = null;
+    cache.doctors = null;
+    cache.locations = null;
+    cache.lastUpdateTime = 0;
 }
 
 // 1. ดึงข้อมูลแพทย์ 1 คน พร้อมเชื่อมโยงตารางอื่น (Department, Position, Expertise)
@@ -45,59 +94,67 @@ export async function getDoctorFullProfile(docId) {
 }
 
 // 2. ดึงแพทย์ทั้งหมด (สำหรับหน้า doctors.html)
+// 🚀 OPTIMIZED: ดึงแผนกครั้งเดียว แล้วใช้ Map แทนดึงซ้ำๆ (ลดจาก N+1 → 2 queries)
 export async function getAllDoctors() {
-    const snap = await getDocs(collection(db, "doctors"));
-    const doctors = [];
+    const [docSnap, deptSnap] = await Promise.all([
+        getDocs(collection(db, "doctors")),
+        getDocs(collection(db, "departments"))
+    ]);
     
-    // วนลูปดึงข้อมูล และดึงชื่อแผนกมาแปะให้เลย (เพื่อเอาไปสร้าง Card)
-    // หมายเหตุ: การดึงแผนกซ้ำๆ อาจช้า ถ้าข้อมูลเยอะควรใช้วิธีเก็บ dept_name ไว้ใน doctors ด้วย
-    for (const d of snap.docs) {
-        const docData = d.data();
-        // ดึงชื่อแผนกแบบด่วนๆ เพื่อมาโชว์หน้าการ์ด
-        const dept = await getById("departments", docData.dept_id);
-        
-        doctors.push({
-            id: d.id,
-            ...docData,
-            deptName: dept ? dept.name : "ไม่ระบุ" 
-        });
-    }
+    // สร้าง Map ของแผนกเพื่อค้นหาแบบ O(1) แทน O(N)
+    const deptMap = {};
+    deptSnap.forEach(d => {
+        deptMap[d.id] = d.data().name;
+    });
+    
+    // แปลงเป็น Array ครั้งเดียว
+    const doctors = docSnap.docs.map(d => ({
+        id: d.id,
+        ...d.data(),
+        deptName: deptMap[d.data().dept_id] || "ไม่ระบุ" 
+    }));
+    
     return doctors;
 }
 
 // 3. ดึงตารางเวรทั้งหมด + ชื่อหมอ + ชื่อแผนก (สำหรับแสดงหน้า index)
+// 🚀 OPTIMIZED: ดึง schedules, doctors, departments พร้อมกัน แล้วใช้ Map (ลดจาก N*M queries → 3 queries)
 export async function getAllSchedulesWithDetails() {
-    const snap = await getDocs(collection(db, "schedules"));
+    const [schedSnap, docSnap, deptSnap] = await Promise.all([
+        getDocs(collection(db, "schedules")),
+        getDocs(collection(db, "doctors")),
+        getDocs(collection(db, "departments"))
+    ]);
     
-    // ใช้ Promise.all เพื่อดึงข้อมูลหมอมาแปะในตารางเวรแต่ละแถว
-    const promises = snap.docs.map(async (docSnap) => {
+    // สร้าง Maps สำหรับค้นหาแบบ O(1)
+    const doctorMap = {};
+    docSnap.forEach(d => {
+        const data = d.data();
+        doctorMap[d.id] = {
+            name: data.name,
+            deptId: data.dept_id
+        };
+    });
+    
+    const deptMap = {};
+    deptSnap.forEach(d => {
+        deptMap[d.id] = d.data().name;
+    });
+    
+    // แปลงครั้งเดียวโดยใช้ Maps
+    return schedSnap.docs.map(docSnap => {
         const s = docSnap.data();
+        const doctor = doctorMap[s.doc_id];
         
-        let docName = "ไม่ระบุ";
-        let deptName = "-";
-        
-        // เอา doc_id ไปดึงชื่อหมอ
-        if (s.doc_id) {
-            const doctor = await getById("doctors", s.doc_id);
-            if (doctor) {
-                docName = doctor.name;
-                // เอา dept_id ของหมอ ไปดึงชื่อแผนกต่อ
-                const dept = await getById("departments", doctor.dept_id);
-                if (dept) deptName = dept.name;
-            }
-        }
-
         return {
             id: docSnap.id,
             day: s.day,
             time: s.time,
             location: s.location,
-            doctorName: docName,
-            deptName: deptName
+            doctorName: doctor?.name || "ไม่ระบุ",
+            deptName: doctor ? (deptMap[doctor.deptId] || "-") : "-"
         };
     });
-
-    return await Promise.all(promises);
 }
 
 // 4. ดึงข้อมูลสรุปสถานะการเปิด-ปิด ของแต่ละแผนก (Weekly Summary)

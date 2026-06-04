@@ -17,7 +17,6 @@ window.currentCategory = 'data';
 // ตารางที่เป็น "โครงสร้างโรงพยาบาล"
 const hospitalStructureTables = ['departments', 'locations'];
 
-// --- ใช้เปลี่ยนหมวดหมู่หลักในแถบเมนูด้านบน (เช่น ข้อมูล, ระบบ) และอัปเดตเมนูแถบข้าง (Sidebar) ให้ตรงกับหมวดหมู่นั้น ---
 window.switchCategory = function (cat, el) {
     window.currentCategory = cat;
     document.querySelectorAll('.top-item').forEach(e => e.classList.remove('active'));
@@ -27,24 +26,29 @@ window.switchCategory = function (cat, el) {
     if (firstMenu) window.switchView(firstMenu.id);
 }
 
-// --- สร้างและเรนเดอร์เมนูด้านข้างตามหมวดหมู่ที่ถูกเลือกอยู่ในปัจจุบัน ---
 window.renderSidebar = function () {
     const sb = document.getElementById('sidebarMenu');
     if (!sb) return;
     sb.innerHTML = `<div class="sidebar-header">${window.currentCategory.toUpperCase()}</div>`;
     menus[window.currentCategory].forEach((m) => {
-        if (m.type === 'header') sb.innerHTML += `<div class="sidebar-sub-header">${m.title}</div>`;
-        else sb.innerHTML += `<div class="menu-item" onclick="switchView('${m.id}', this)"><i class="fa-solid ${m.icon}"></i> ${m.name}</div>`;
+        if (m.type === 'header') {
+            sb.innerHTML += `<div class="sidebar-sub-header">${m.title}</div>`;
+        } else {
+            sb.innerHTML += `<div class="menu-item" onclick="switchView('${m.id}', this)"><i class="fa-solid ${m.icon}"></i> ${m.name}</div>`;
+        }
     });
 }
 
-// --- สลับหน้าจอการแสดงผลหลัก (เช่น Dashboard, ตาราง, Logs, จัดเวร) พร้อมจัดการสิทธิ์การแสดงปุ่มเพิ่มข้อมูลสำหรับ Secretary ---
 window.switchView = function (viewId, el) {
     if (el) {
         document.querySelectorAll('.menu-item').forEach(e => e.classList.remove('active'));
         el.classList.add('active');
     } else {
         window.renderSidebar();
+        setTimeout(() => {
+            const firstItem = document.querySelector(`.menu-item[onclick*="'${viewId}'"]`);
+            if(firstItem) firstItem.classList.add('active');
+        }, 50);
     }
 
     document.querySelectorAll('.section-view').forEach(e => e.classList.remove('active'));
@@ -53,10 +57,16 @@ window.switchView = function (viewId, el) {
     if (viewId === 'dashboard') {
         document.getElementById('dashboardView').classList.add('active');
         window.loadDashboard();
-    } else if (viewId === 'scheduleManager') {
+    } else if (viewId === 'schedule_current' || viewId === 'schedule_next') {
         document.getElementById('scheduleManagerView').classList.add('active');
         window.loadScheduleFilterOptions();
-        if (window.currentScheduleMode === 'grid') window.loadScheduleManager(); else window.loadScheduleList();
+        const mode = viewId === 'schedule_current' ? 'current' : 'next';
+        window.switchScheduleMode(mode);
+    } else if (viewId === 'shift_summary') {
+        // 🌟 เรียกหน้าสรุปจำนวนเวร
+        document.getElementById('shiftSummaryView').classList.add('active');
+        if (window.loadShiftSummaryFilter) window.loadShiftSummaryFilter();
+        if (window.loadShiftSummary) window.loadShiftSummary();
     } else if (viewId.startsWith('logs_')) {
         document.getElementById('auditLogsView').classList.add('active');
         const category = viewId.split('_')[1];
@@ -68,7 +78,6 @@ window.switchView = function (viewId, el) {
         document.getElementById('tableView').classList.add('active');
         window.currentCollection = viewId;
 
-        // 🌟 2. ซ่อนปุ่ม "เพิ่มข้อมูล" สำหรับ Secretary ในหน้าโครงสร้างโรงพยาบาล
         const addBtn = document.querySelector('.action-bar .btn-add');
         if (addBtn) {
             const isReadOnly = window.currentUser.role === 'Secretary' && hospitalStructureTables.includes(viewId);
@@ -83,7 +92,6 @@ window.switchView = function (viewId, el) {
     }
 }
 
-// --- ดึงข้อมูลสถิติจำนวนแพทย์ แผนก ตารางเวร และผู้ใช้งาน เพื่อนำมาแสดงในหน้า Dashboard ---
 window.loadDashboard = async () => {
     try {
         const [docSnap, deptSnap, schSnap, userSnap] = await Promise.all([
@@ -104,28 +112,20 @@ window.loadDashboard = async () => {
     }
 }
 
-// --- โหลดข้อมูลจาก Firestore ตาม Collection ที่เลือก มาสร้างเป็นตาราง รองรับการค้นหา กรองข้อมูล และตรวจสอบสิทธิ์แบบ Read-only ---
 window.loadTable = async function () {
     const tbody = document.getElementById('tableBody');
     const thead = document.getElementById('tableHead');
-
-    // 🌟 1. จำค่า Collection ณ วินาทีที่ฟังก์ชันถูกเรียก
     const targetCollection = window.currentCollection;
     const schema = schemas[targetCollection];
 
     document.getElementById('pageTitle').innerText = `จัดการ${schema.title}`;
+    tbody.innerHTML = `<tr class="loading-row"><td colspan="10"><div class="loader"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลดข้อมูล...</div></td></tr>`;
 
-    // 🌟 2. เคลียร์ข้อมูลเก่าและขึ้นสถานะ Loading ทันที
-    tbody.innerHTML = `<tr><td colspan="10" align="center" style="padding: 30px;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลดข้อมูล...</td></tr>`;
-
-    // ตรวจสอบสิทธิ์ Read-only
     const isReadOnly = window.currentUser.role === 'Secretary' && hospitalStructureTables.includes(targetCollection);
-
     const searchText = document.getElementById('searchInput')?.value.toLowerCase() || "";
     const filterDept = document.getElementById('filterDept')?.value || "";
     const filterSpec = document.getElementById('filterSpec')?.value || "";
 
-    // สร้าง Header ตาราง
     let headerHtml = `<tr><th class="chk-col">${isReadOnly ? '' : '<input type="checkbox" id="selectAll" onchange="toggleSelectAll()">'}</th>`;
     schema.fields.forEach(f => { if (!f.isId && !f.hideInTable) headerHtml += `<th>${f.label}</th>`; });
     headerHtml += `<th>จัดการ</th></tr>`;
@@ -139,13 +139,8 @@ window.loadTable = async function () {
             sSnap.forEach(d => specMap[d.id] = d.data().name);
         }
 
-        // ดึงข้อมูลโดยใช้เป้าหมายที่ถูกล็อกไว้ (targetCollection) ไม่ใช่ Global Variable
         const snap = await getDocs(collection(db, targetCollection));
-
-        // 🌟 3. ป้องกัน Race Condition: ถ้าระหว่างที่รอข้อมูล (await) ผู้ใช้กดเปลี่ยนหน้าไปแล้ว ให้หยุดการทำงานทันที
-        if (window.currentCollection !== targetCollection) {
-            return; // หยุดการทำงาน ไม่ต้องเรนเดอร์ตารางทับของใหม่
-        }
+        if (window.currentCollection !== targetCollection) return; 
 
         let html = "";
         let tableData = [];
@@ -197,12 +192,10 @@ window.loadTable = async function () {
 
     } catch (e) {
         console.error("Load Table Error:", e);
-        // 🌟 4. ดัก Error ให้ UI แจ้งเตือน แทนที่จะพังไปเฉยๆ
         tbody.innerHTML = `<tr><td colspan="10" align="center" style="color: #dc3545; padding: 30px;"><i class="fa-solid fa-triangle-exclamation"></i> เกิดข้อผิดพลาดในการโหลดข้อมูล กรุณาลองใหม่อีกครั้ง</td></tr>`;
     }
 }
 
-// --- ดึงข้อมูลแผนกและความเชี่ยวชาญมาใส่ใน Dropdown ให้ผู้ใช้สามารถกรองข้อมูลในตารางแพทย์ได้ ---
 window.loadFilterOptions = async function () {
     const deptSelect = document.getElementById('filterDept'), specSelect = document.getElementById('filterSpec');
     if (!deptSelect) return;
@@ -211,10 +204,8 @@ window.loadFilterOptions = async function () {
     if (specSelect) specSelect.innerHTML = '<option value="">-- ทุกความเชี่ยวชาญ --</option>' + specSnap.docs.map(d => `<option value="${d.id}">${d.data().name}</option>`).join('');
 }
 
-// --- นำฟิลเตอร์ที่เลือกไปกรองตาราง ---
 window.applyFilters = () => window.loadTable();
 
-// --- ลบข้อมูลทีละรายการและบันทึกประวัติ (Log) ---
 window.deleteItem = async (id) => {
     if (confirm("ลบข้อมูลนี้?")) {
         await deleteDoc(doc(db, window.currentCollection, id));
@@ -224,24 +215,20 @@ window.deleteItem = async (id) => {
     }
 }
 
-// --- สลับสถานะเปิด-ปิดการใช้งานของแถวนั้นๆ (เช่น สวิตช์เปิด/ปิดแผนก) ---
 window.toggleItemStatus = async (coll, id, field, status) => {
     await setDoc(doc(db, coll, id), { [field]: status }, { merge: true });
     if (window.saveLog) window.saveLog(status ? "เปิดใช้งาน" : "ปิดใช้งาน", `ปรับสถานะของ ID: ${id} ในหมวด ${schemas[coll].title}`);
     window.loadTable();
 }
 
-// --- จัดการการเลือก Checkbox หลายรายการพร้อมกัน เพื่อกดปุ่มลบข้อมูลทีละมากๆ ---
 window.toggleSelectAll = () => { document.querySelectorAll('.row-check').forEach(cb => cb.checked = document.getElementById('selectAll').checked); window.checkBulkBtn(); };
 
-// --- เช็คจำนวน Checkbox ที่ถูกเลือก เพื่อแสดง/ซ่อน ปุ่มลบแบบกลุ่ม ---
 window.checkBulkBtn = () => {
     const count = document.querySelectorAll('.row-check:checked').length;
     const btn = document.getElementById('btnBulkDel');
     if (btn) { btn.style.display = count > 0 ? 'inline-flex' : 'none'; document.getElementById('selectedCount').innerText = count; }
 };
 
-// --- ลบข้อมูลทีละหลายรายการตาม Checkbox ที่เลือกไว้ ---
 window.deleteBulk = async () => {
     const checkedBoxes = document.querySelectorAll('.row-check:checked');
     if (checkedBoxes.length === 0) return;

@@ -81,8 +81,11 @@
                     <table>
                         <thead id="tableHead"></thead>
                         <tbody id="tableBody">
-                            <tr>
-                                <td colspan="10" align="center">โหลด...</td>
+                            <tr class="loading-row">
+                                <td colspan="10">
+                                    <div class="loader"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลดข้อมูล...
+                                    </div>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -104,20 +107,14 @@
                         <button class="btn btn-del" onclick="clearAllOpdSchedules()" style="margin-right: 15px;">
                             <i class="fa-solid fa-building-circle-xmark"></i> ปิดทุกแผนก (ล้างทั้งหมด)
                         </button>
-
-                        <div class="view-switcher">
-                            <button class="view-btn active" onclick="switchScheduleMode('grid', this)"><i
-                                    class="fa-solid fa-table-cells"></i> มุมมองตาราง (Grid)</button>
-                            <button class="view-btn" onclick="switchScheduleMode('list', this)"><i
-                                    class="fa-solid fa-list"></i> มุมมองรายการ (List)</button>
-                        </div>
                     </div>
                 </div>
 
-                <div id="scheduleGridContainer" class="schedule-sub-view active">
+                <div id="scheduleCurrentContainer" class="schedule-sub-view active">
                     <div class="filter-bar" style="margin-bottom: 20px;">
                         <div class="filter-group" style="max-width: 300px;">
-                            <label class="filter-label"><i class="fa-solid fa-hospital"></i> เลือกแผนกที่จะดู</label>
+                            <label class="filter-label"><i class="fa-solid fa-hospital"></i> เลือกแผนกที่จะดู
+                                (ปัจจุบัน)</label>
                             <select id="schedFilterDept" class="filter-input" onchange="loadScheduleManager()">
                                 <option value="">-- แสดงทุกแผนก --</option>
                             </select>
@@ -136,62 +133,99 @@
                                 </tr>
                             </thead>
                             <tbody id="gridBody">
-                                <tr>
-                                    <td colspan="6" style="padding:50px;">⏳ กำลังโหลดตาราง...</td>
+                                <tr class="loading-row">
+                                    <td colspan="6">
+                                        <div class="loader"><i class="fa-solid fa-spinner fa-spin"></i>
+                                            กำลังโหลดตาราง...</div>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <div id="scheduleListContainer" class="schedule-sub-view">
+                <div id="scheduleNextContainer" class="schedule-sub-view">
+
                     <div class="filter-bar" style="margin-bottom: 20px;">
-                        <div class="filter-group">
-                            <label class="filter-label"><i class="fa-regular fa-calendar"></i> เลือกวัน</label>
-                            <select id="listFilterDay" class="filter-input" onchange="loadScheduleList()">
-                                <option value="">-- แสดงทุกวัน --</option>
-                                <option value="จันทร์">จันทร์</option>
-                                <option value="อังคาร">อังคาร</option>
-                                <option value="พุธ">พุธ</option>
-                                <option value="พฤหัส">พฤหัส</option>
-                                <option value="ศุกร์">ศุกร์</option>
+                        <div class="filter-group" style="max-width: 300px;">
+                            <label class="filter-label"><i class="fa-solid fa-hospital"></i> เลือกแผนกที่จะดู
+                                (สัปดาห์ถัดไป)</label>
+                            <select id="nextSchedFilterDept" class="filter-input" onchange="loadScheduleManager()">
+                                <option value="">-- แสดงทุกแผนก --</option>
                             </select>
-                        </div>
-                        <div class="filter-group">
-                            <label class="filter-label"><i class="fa-solid fa-hospital-user"></i> เลือกแผนก</label>
-                            <select id="listFilterDept" class="filter-input" onchange="loadScheduleList()">
-                                <option value="">-- ทุกแผนก --</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label class="filter-label"><i class="fa-solid fa-magnifying-glass"></i>
-                                ค้นหาชื่อแพทย์</label>
-                            <input type="text" id="listSearchDoc" class="filter-input" placeholder="พิมพ์ชื่อแพทย์..."
-                                onkeyup="loadScheduleList()">
                         </div>
                     </div>
-
-                    <div class="table-container">
-                        <table>
+                    <div class="grid-editor-container">
+                        <table class="grid-table">
                             <thead>
                                 <tr>
-                                    <th>แพทย์</th>
-                                    <th>แผนก</th>
-                                    <th>วัน</th>
-                                    <th>กะเวลา</th>
-                                    <th>จัดการ</th>
+                                    <th>แผนก / วัน</th>
+                                    <th>จันทร์</th>
+                                    <th>อังคาร</th>
+                                    <th>พุธ</th>
+                                    <th>พฤหัส</th>
+                                    <th>ศุกร์</th>
                                 </tr>
                             </thead>
-                            <tbody id="schedListBody">
-                                <tr>
-                                    <td colspan="5" align="center">กำลังโหลด...</td>
+                            <tbody id="nextGridBody">
+                                <tr class="loading-row">
+                                    <td colspan="6">
+                                        <div class="loader"><i class="fa-solid fa-spinner fa-spin"></i>
+                                            กำลังโหลดตารางสัปดาห์ถัดไป...</div>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
+            <div id="shiftSummaryView" class="section-view">
+                <div class="header">
+                    <h1><i class="fa-solid fa-user-clock"></i> สรุปจำนวนเวรแพทย์</h1>
+                    <div class="action-bar">
+                        <button class="btn btn-edit" onclick="loadShiftSummary()"
+                            style="background: var(--primary); color: white; border: none; font-size: 0.9rem; padding: 8px 16px;">
+                            <i class="fa-solid fa-rotate-right"></i> รีเฟรชข้อมูลล่าสุด
+                        </button>
+                    </div>
+                </div>
 
+                <div class="filter-bar" style="margin-bottom: 20px;">
+                    <div class="filter-group">
+                        <label class="filter-label"><i class="fa-solid fa-magnifying-glass"></i> ค้นหาชื่อแพทย์</label>
+                        <input type="text" id="summarySearch" class="filter-input"
+                            placeholder="พิมพ์ชื่อแพทย์ที่ต้องการ..." onkeyup="loadShiftSummary()">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label"><i class="fa-solid fa-hospital"></i> กรองตามแผนกหลัก</label>
+                        <select id="summaryDept" class="filter-input" onchange="loadShiftSummary()">
+                            <option value="">-- ทุกแผนก --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead style="background: #f8f9fa;">
+                            <tr>
+                                <th>ชื่อแพทย์</th>
+                                <th>แผนกหลักที่สังกัด</th>
+                                <th style="text-align: center;">เวรสัปดาห์ปัจจุบัน (กะ)</th>
+                                <th style="text-align: center;">เวรสัปดาห์ถัดไป (กะ)</th>
+                                <th style="text-align: center;">รวมทั้งหมด (กะ)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shiftSummaryBody">
+                            <tr class="loading-row">
+                                <td colspan="5">
+                                    <div class="loader"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลดข้อมูล...
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
             <div id="importView" class="section-view">
                 <div class="header">
                     <h1><i class="fa-solid fa-cloud-arrow-up"></i> นำเข้าข้อมูล (Import)</h1>
@@ -335,10 +369,10 @@
 
             <div class="form-group">
                 <label>เลือกแพทย์ (ในแผนก):</label>
-                <select id="assignDocSelect"
-                    style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc; font-size:1rem;">
-                    <option value="">กำลังโหลดรายชื่อ...</option>
-                </select>
+                <div id="assignDocContainer"></div>
+                <button type="button" class="btn-add-row" id="btnAddDocRow" style="margin-top: 10px;">
+                    + เพิ่มแพทย์
+                </button>
             </div>
 
             <div class="form-group">
@@ -385,7 +419,7 @@
 
 
     <script type="module" src="js/admin/admin.js"></script>
-    <SCript>
+    <script>
         document.addEventListener('DOMContentLoaded', () => {
             const mobileMenuBtn = document.getElementById('mobileMenuBtn');
             const sidebarMenu = document.getElementById('sidebarMenu');
@@ -409,7 +443,7 @@
                 }
             });
         });
-    </SCript>
+    </script>
 </body>
 
 </html>

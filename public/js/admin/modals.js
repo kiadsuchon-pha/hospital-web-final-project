@@ -5,6 +5,7 @@ import { collection, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.co
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 import { db } from "../firebase-config.js";
 import { getDoctorName } from "../utils.js";
+import { getCachedStaticData } from "../db-service.js";
 import { schemas } from "./config.js";
 
 const storage = getStorage();
@@ -38,9 +39,14 @@ window.addSpecialtyRow = async (containerId, selectedValue = "") => {
 let deptOptionsCache = ""; 
 async function fetchDeptOptions() {
     if (deptOptionsCache) return deptOptionsCache;
-    const snap = await getDocs(collection(db, "departments"));
+    // 🚀 ใช้ Cached Data แทน Query ตรง
+    const { departments } = await getCachedStaticData();
     let options = `<option value="">-- เลือกแผนก --</option>`;
-    snap.forEach(d => { if(d.data().is_active !== false) options += `<option value="${d.id}">${d.data().name}</option>`; });
+    departments
+        .filter(d => d.is_active !== false)
+        .forEach(d => { 
+            options += `<option value="${d.id}">${d.name}</option>`; 
+        });
     deptOptionsCache = options;
     return options;
 }
@@ -126,10 +132,11 @@ window.openModal = async (mode, data = {}) => {
             const selectId = `doc_select_${Date.now()}`;
             input = `<select id="${selectId}" name="${f.key}" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px;" ${f.required ? 'required' : ''}><option>Loading...</option></select>`;
             dynamicFieldsToLoad.push(async () => {
-                const docSnap = await getDocs(collection(db, "doctors"));
+                // 🚀 ใช้ Cached Data แทน Query ตรง
+                const { doctors } = await getCachedStaticData();
                 let options = `<option value="">-- เลือกแพทย์ --</option>`;
-                docSnap.forEach(d => {
-                    const name = getDoctorName(d.data());
+                doctors.forEach(d => {
+                    const name = getDoctorName(d);
                     options += `<option value="${d.id}" ${d.id === val ? 'selected' : ''}>${name}</option>`;
                 });
                 document.getElementById(selectId).innerHTML = options;

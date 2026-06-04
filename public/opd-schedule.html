@@ -87,11 +87,23 @@
 
         // ตัวแปรส่วนกลางเก็บข้อมูลทั้งหมดเพื่อกรองแบบ Real-time
         let allGroupedData = {}; 
+        let isDropdownsLoaded = false; // ป้องกันการใส่ตัวเลือกใน Dropdown ซ้ำเมื่อสลับสัปดาห์
 
-        window.onload = loadOPDSchedule;
+        document.addEventListener('DOMContentLoaded', () => {
+            // ผูก Event Listeners สำหรับดักจับการเปลี่ยนแปลงตัวกรอง
+            document.getElementById('filterLocation')?.addEventListener('change', renderFilteredTable);
+            document.getElementById('filterDepartment')?.addEventListener('change', renderFilteredTable);
+            document.getElementById('filterDay')?.addEventListener('change', renderFilteredTable);
+
+            // โหลดข้อมูลครั้งแรก
+            loadOPDSchedule();
+        });
 
         async function loadOPDSchedule() {
             const tableBody = document.getElementById('opdTableBody');
+            tableBody.innerHTML = `<tr><td colspan="6" style="padding:50px; text-align:center; color: var(--primary);">⏳ กำลังโหลดตารางเวลา...</td></tr>`;
+
+            const opdColl = 'opd_schedules';
 
             // 1. ดึงข้อมูลบันทึกการแก้ไขล่าสุด (Audit Log)
             try {
@@ -111,7 +123,7 @@
             try {
                 const [deptSnap, opdSnap, locSnap] = await Promise.all([
                     getDocs(collection(db, "departments")),
-                    getDocs(collection(db, "opd_schedules")),
+                    getDocs(collection(db, opdColl)), // ดึงตารางจาก Collection ตามสัปดาห์ที่เลือก
                     getDocs(collection(db, "locations"))
                 ]);
 
@@ -119,7 +131,7 @@
                 const filterLoc = document.getElementById('filterLocation');
                 locSnap.forEach(doc => {
                     locsMap[doc.id] = doc.data().name;
-                    filterLoc.add(new Option(doc.data().name, doc.id)); // เพิ่มรายชื่อลง Dropdown ตัวกรอง
+                    if (!isDropdownsLoaded && filterLoc) filterLoc.add(new Option(doc.data().name, doc.id)); // ใส่ชื่อห้องลง Dropdown แค่รอบแรก
                 });
 
                 let deptsMap = {};
@@ -127,9 +139,11 @@
                 deptSnap.forEach(doc => {
                     if (doc.data().is_active !== false) {
                         deptsMap[doc.id] = doc.data();
-                        filterDept.add(new Option(doc.data().name, doc.id)); // เพิ่มรายชื่อลง Dropdown ตัวกรอง
+                        if (!isDropdownsLoaded && filterDept) filterDept.add(new Option(doc.data().name, doc.id)); // ใส่ชื่อแผนกลง Dropdown แค่รอบแรก
                     }
                 });
+
+                isDropdownsLoaded = true; // ล็อกไว้เพื่อไม่ให้เพิ่มรายชื่อแผนกและห้องซ้ำเวลาสลับสัปดาห์
 
                 if (Object.keys(deptsMap).length === 0) {
                     tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#888;">ไม่พบข้อมูลแผนก</td></tr>`;
@@ -177,17 +191,12 @@
 
                 allGroupedData = groupedData;
 
-                // ผูก Event Listeners สำหรับดักจับการเปลี่ยนแปลงตัวกรอง
-                document.getElementById('filterLocation').addEventListener('change', renderFilteredTable);
-                document.getElementById('filterDepartment').addEventListener('change', renderFilteredTable);
-                document.getElementById('filterDay').addEventListener('change', renderFilteredTable);
-
                 // แสดงตารางข้อมูลรอบแรก
                 renderFilteredTable();
 
             } catch (error) {
                 console.error("Error loading schedule:", error);
-                tableBody.innerHTML = `<tr><td colspan="6" style="color:red; text-align:center;">โหลดข้อมูลไม่สำเร็จ</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="6" style="color:red; text-align:center;">โหลดข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง</td></tr>`;
             }
         }
 
