@@ -1,7 +1,7 @@
 // ==========================================
 // ไฟล์: js/admin/schedule.js
 // ==========================================
-import { collection, getDocs, doc, setDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { collection, getDocs, doc, setDoc, deleteDoc, query, where, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { db } from "../firebase-config.js";
 import { getDoctorName } from "../utils.js";
 import { getCachedStaticData } from "../db-service.js";
@@ -156,7 +156,6 @@ window.loadScheduleManager = async () => {
     }
 }
 
-// 🌟 อัปเดตตรรกะจัดเวรอัตโนมัติ (บังคับกฎจัดเวร 2 คน และข้ามกะที่มีคนอยู่แล้ว)
 window.autoAssignSchedules = async () => {
     if (!confirm("✨ จัดเวรอัตโนมัติในช่องที่ว่างหรือไม่?\n\n(ระบบจะจัดทีม 2 คนต่อกะ, ถ้ายกะไหนมีแพทย์อยู่แล้วจะไม่จัดเพิ่ม, ทำงานไม่เกิน 2 กะติดกัน, และเว้นพัก 8-16 ชม.)")) return;
     try {
@@ -176,7 +175,6 @@ window.autoAssignSchedules = async () => {
         const doctorsByDept = {};
         const shiftCounts = {}; 
         
-        // แปลงตาราง 5 วัน 2 กะ ให้เป็น Array 10 ช่อง (0 ถึง 9) เพื่อเช็คการทำงานติดกัน
         const tracker = {}; 
         const dayMap = { "จันทร์": 0, "อังคาร": 1, "พุธ": 2, "พฤหัส": 3, "ศุกร์": 4 };
         const getShiftIndex = (day, shift) => (dayMap[day] * 2) + (shift === '1' ? 0 : 1);
@@ -192,7 +190,6 @@ window.autoAssignSchedules = async () => {
             });
         });
 
-        // นับจำนวนหมอที่มีอยู่แล้วในแต่ละห้อง (Room)
         const roomAssignedCounts = {};
         
         docSchSnap.forEach(d => {
@@ -216,37 +213,28 @@ window.autoAssignSchedules = async () => {
             
             let currentAssigned = roomAssignedCounts[roomKey] || 0;
             
-            // 🚨 ตรรกะใหม่: ถ้าในกะนี้มีแพทย์อยู่แล้ว จะข้ามและไม่จัดเพิ่มเด็ดขาด
             if (currentAssigned > 0) {
-                return; // การ return ใน forEach ทำหน้าที่เหมือน continue ข้ามไปทำห้องต่อไป
+                return; 
             }
             
-            // 🚨 ตรรกะใหม่: จัดทีมลงกะว่างให้ได้ 2 คนถ้วนๆ
             let needed = 2;
             
             if (needed > 0) {
                 let availableDocs = (doctorsByDept[opd.dept_id] || []).filter(id => {
                     const w = tracker[id];
-                    if (w[sIndex]) return false; // ติดเวรที่อื่นในเวลานี้แล้ว
-                    
-                    // กฎเหล็ก: ห้ามเข้ากะติดต่อกันเกิน 2 กะ (เว้นพัก 1 กะ = 8-16 ชม.)
-                    // 1. ถ้าย้อนกลับไป 2 กะ ทำงานติดกันมาแล้ว -> กะนี้ห้ามทำ (ต้องพัก)
+                    if (w[sIndex]) return false; 
                     if (sIndex >= 2 && w[sIndex-1] && w[sIndex-2]) return false;
-                    // 2. ถ้าในอนาคต 2 กะ โดนลงเวรไว้แล้ว -> กะนี้ห้ามทำ (เดี๋ยวจะติดกัน 3 กะ)
                     if (sIndex <= 7 && w[sIndex+1] && w[sIndex+2]) return false;
-                    // 3. ถ้ากะก่อนหน้า และกะถัดไป ทำงานอยู่ -> กะนี้ห้ามทำ (ตรงกลางเป็นแซนวิชรวมเป็น 3)
                     if (sIndex >= 1 && sIndex <= 8 && w[sIndex-1] && w[sIndex+1]) return false;
                     
                     return true;
                 });
 
-                // เรียงให้คนที่เวรน้อยสุดได้ก่อน (Load Balancing)
                 availableDocs.sort((a, b) => {
                     if (shiftCounts[a] === shiftCounts[b]) return 0.5 - Math.random();
                     return shiftCounts[a] - shiftCounts[b];
                 });
 
-                // จัดหมอลงเวรตามจำนวนที่ขาด (ถ้าหมอเหลือให้ลงน้อยกว่า needed ก็ลงเท่าที่มี)
                 for (let i = 0; i < needed && i < availableDocs.length; i++) {
                     const selectedDoc = availableDocs[i];
                     promises.push(setDoc(doc(db, docColl, `assign_auto_${Date.now()}_${count}`), { 
@@ -257,7 +245,7 @@ window.autoAssignSchedules = async () => {
                         location_id: opd.location_id 
                     }));
                     
-                    tracker[selectedDoc][sIndex] = true; // บันทึกลง Tracker ดักการลงซ้อนทันที
+                    tracker[selectedDoc][sIndex] = true; 
                     shiftCounts[selectedDoc]++;
                     count++;
                 }
@@ -278,7 +266,6 @@ window.autoAssignSchedules = async () => {
     } catch (e) { alert(e.message); }
 }
 
-// 🌟 ระบบหน้าสรุปจำนวนเวร (Shift Summary)
 window.loadShiftSummaryFilter = async () => {
     const summaryDept = document.getElementById('summaryDept');
     if (!summaryDept) return;
@@ -325,7 +312,6 @@ window.loadShiftSummary = async () => {
         let html = "";
         let found = 0;
 
-        // ดึง Map มาเป็น Array เพื่อจัดเรียงตามจำนวนรวม
         const sumArray = Object.values(summaryMap).sort((a, b) => (b.currentCount + b.nextCount) - (a.currentCount + a.nextCount));
 
         sumArray.forEach(doc => {
@@ -563,3 +549,177 @@ window.removeDoctor = async (id, docName = "แพทย์", deptName = "", day
 
 window.closeAssignModal = () => document.getElementById('assignModal').style.display = 'none';
 window.closeOpenShiftModal = () => document.getElementById('openShiftModal').style.display = 'none';
+
+// ==========================================
+// 🌟 ระบบสลับตารางเวร (Current <-> Next)
+// ==========================================
+
+// 1. ฟังก์ชันสลับตาราง (Core Logic)
+window.rotateScheduleAutomated = async () => {
+    try {
+        const nextDocSnap = await getDocs(collection(db, "doctor_schedules_next"));
+        if (nextDocSnap.empty) {
+            console.log("ไม่มีตารางสัปดาห์หน้า -> ข้ามการแทนที่");
+            return false; 
+        }
+
+        const nextOpdSnap = await getDocs(collection(db, "opd_schedules_next"));
+        const nextDocs = nextDocSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const nextOpds = nextOpdSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        const currOpdSnap = await getDocs(collection(db, "opd_schedules"));
+        const currDocSnap = await getDocs(collection(db, "doctor_schedules"));
+        const deletePromises = [];
+        currOpdSnap.forEach(d => deletePromises.push(deleteDoc(doc(db, "opd_schedules", d.id))));
+        currDocSnap.forEach(d => deletePromises.push(deleteDoc(doc(db, "doctor_schedules", d.id))));
+        await Promise.all(deletePromises);
+
+        const insertPromises = [];
+        nextOpds.forEach(d => insertPromises.push(setDoc(doc(db, "opd_schedules", d.id), d)));
+        nextDocs.forEach(d => insertPromises.push(setDoc(doc(db, "doctor_schedules", d.id), d)));
+        await Promise.all(insertPromises);
+
+        const clearNextPromises = [];
+        nextOpdSnap.forEach(d => clearNextPromises.push(deleteDoc(doc(db, "opd_schedules_next", d.id))));
+        nextDocSnap.forEach(d => clearNextPromises.push(deleteDoc(doc(db, "doctor_schedules_next", d.id))));
+        await Promise.all(clearNextPromises);
+
+        return true;
+    } catch (error) {
+        console.error("Rotate Schedule Error:", error);
+        return false;
+    }
+}
+
+// 2. ฟังก์ชันตรวจสอบอัตโนมัติ (เช็กจากวันจันทร์)
+window.checkAndRunAutoRotation = async () => {
+    try {
+        const settingsRef = doc(db, "system_settings", "schedule_status");
+        const settingsSnap = await getDoc(settingsRef);
+
+        const now = new Date();
+        const dayOfWeek = now.getDay() || 7; 
+        const currentMonday = new Date(now);
+        currentMonday.setDate(now.getDate() - dayOfWeek + 1);
+        const currentMondayStr = currentMonday.toISOString().split('T')[0];
+
+        let lastRotatedMonday = "";
+        if (settingsSnap.exists()) lastRotatedMonday = settingsSnap.data().last_rotated_monday;
+
+        if (currentMondayStr !== lastRotatedMonday) {
+            console.log("🔔 ตรวจพบการขึ้นสัปดาห์ใหม่ ดำเนินการสลับตาราง...");
+            const success = await window.rotateScheduleAutomated(); 
+            await setDoc(settingsRef, { last_rotated_monday: currentMondayStr }, { merge: true });
+            
+            if (success) {
+                window.clearScheduleCache();
+                window.loadScheduleManager();
+                if (window.saveLog) window.saveLog("ระบบอัตโนมัติ", "สลับตารางสัปดาห์ถัดไปขึ้นมาเป็นปัจจุบันสำเร็จ", "schedule");
+            }
+        }
+    } catch (e) {
+        console.error("Auto Rotation Check Error:", e);
+    }
+}
+
+// 3. ฟังก์ชันสำหรับปุ่มกดสลับตารางด้วยมือ (Manual Force Rotate)
+window.forceRotateSchedule = async () => {
+    const nextDocSnap = await getDocs(collection(db, "doctor_schedules_next"));
+    if (nextDocSnap.empty) {
+        alert("❌ ไม่สามารถสลับได้ เนื่องจากยังไม่มีการจัดตารางใน 'สัปดาห์ถัดไป'");
+        return;
+    }
+
+    if (!confirm("⚠️ คำเตือน: คุณต้องการดัน 'ตารางสัปดาห์ถัดไป' ขึ้นมาทับ 'ตารางปัจจุบัน' ใช่หรือไม่?\n\n(ข้อมูลตารางปัจจุบันจะถูกลบทิ้ง และตารางสัปดาห์ถัดไปจะว่างเปล่าทันที)")) {
+        return;
+    }
+
+    const btn = document.querySelector('button[onclick="forceRotateSchedule()"]');
+    const originalText = btn.innerHTML; 
+    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังสลับตาราง...`; 
+    btn.disabled = true;
+
+    const success = await window.rotateScheduleAutomated();
+    
+    if (success) {
+        window.clearScheduleCache();
+        window.loadScheduleManager();
+        if (window.saveLog) window.saveLog("สลับตารางด้วยมือ", "แอดมินกดปุ่มสลับตารางสัปดาห์ถัดไปขึ้นมาเป็นปัจจุบัน", "schedule");
+        
+        const now = new Date();
+        const dayOfWeek = now.getDay() || 7; 
+        const currentMonday = new Date(now);
+        currentMonday.setDate(now.getDate() - dayOfWeek + 1);
+        await setDoc(doc(db, "system_settings", "schedule_status"), { 
+            last_rotated_monday: currentMonday.toISOString().split('T')[0] 
+        }, { merge: true });
+
+        alert("✅ ดันตารางสัปดาห์หน้ามาเป็นปัจจุบันสำเร็จ!");
+    } else {
+        alert("❌ เกิดข้อผิดพลาดในการสลับตาราง");
+    }
+
+    btn.innerHTML = originalText; 
+    btn.disabled = false;
+}
+
+// ==========================================
+// 🌟 ฟังก์ชันคัดลอกตารางเวร (Current -> Next)
+// ==========================================
+window.copyCurrentToNextSchedule = async () => {
+    if (!confirm("⚠️ ยืนยันการคัดลอกตารางจาก 'ปัจจุบัน' ไปยัง 'สัปดาห์ถัดไป' หรือไม่?\n\n(หากสัปดาห์ถัดไปมีข้อมูลอยู่แล้ว ข้อมูลเก่าของสัปดาห์ถัดไปจะถูกลบและเขียนทับทั้งหมด)")) {
+        return;
+    }
+
+    const btn = document.querySelector('button[onclick="copyCurrentToNextSchedule()"]');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังคัดลอก...`;
+    btn.disabled = true;
+
+    try {
+        const [currOpdSnap, currDocSnap] = await Promise.all([
+            getDocs(collection(db, "opd_schedules")),
+            getDocs(collection(db, "doctor_schedules"))
+        ]);
+
+        if (currOpdSnap.empty && currDocSnap.empty) {
+            alert("❌ ไม่มีข้อมูลตารางปัจจุบันให้คัดลอก (ตารางว่างเปล่า)");
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            return;
+        }
+
+        const [nextOpdSnap, nextDocSnap] = await Promise.all([
+            getDocs(collection(db, "opd_schedules_next")),
+            getDocs(collection(db, "doctor_schedules_next"))
+        ]);
+        
+        const clearPromises = [];
+        nextOpdSnap.forEach(d => clearPromises.push(deleteDoc(doc(db, "opd_schedules_next", d.id))));
+        nextDocSnap.forEach(d => clearPromises.push(deleteDoc(doc(db, "doctor_schedules_next", d.id))));
+        await Promise.all(clearPromises);
+
+        const copyPromises = [];
+        currOpdSnap.forEach(d => {
+            copyPromises.push(setDoc(doc(db, "opd_schedules_next", d.id), d.data()));
+        });
+        currDocSnap.forEach(d => {
+            copyPromises.push(setDoc(doc(db, "doctor_schedules_next", d.id), d.data()));
+        });
+
+        await Promise.all(copyPromises);
+
+        window.clearScheduleCache();
+        window.loadScheduleManager(); 
+        
+        if (window.saveLog) window.saveLog("คัดลอกตาราง", "แอดมินคัดลอกตารางเวรจากสัปดาห์ปัจจุบันไปยังสัปดาห์ถัดไป", "schedule");
+        
+        alert("✅ คัดลอกตารางเวรมายังสัปดาห์ถัดไปสำเร็จ! คุณสามารถแก้ไขเวรเพิ่มเติมได้เลย");
+    } catch (error) {
+        console.error("Copy Schedule Error:", error);
+        alert("❌ เกิดข้อผิดพลาดในการคัดลอกตาราง: " + error.message);
+    }
+
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+}

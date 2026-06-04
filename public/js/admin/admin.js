@@ -60,10 +60,15 @@ window.switchView = function (viewId, el) {
     } else if (viewId === 'schedule_current' || viewId === 'schedule_next') {
         document.getElementById('scheduleManagerView').classList.add('active');
         window.loadScheduleFilterOptions();
+        
+        // 🌟 ให้ระบบเช็กว่าขึ้นสัปดาห์ใหม่หรือยัง เมื่อคลิกเข้าเมนูจัดตาราง
+        if (typeof window.checkAndRunAutoRotation === 'function') {
+            window.checkAndRunAutoRotation();
+        }
+
         const mode = viewId === 'schedule_current' ? 'current' : 'next';
         window.switchScheduleMode(mode);
     } else if (viewId === 'shift_summary') {
-        // 🌟 เรียกหน้าสรุปจำนวนเวร
         document.getElementById('shiftSummaryView').classList.add('active');
         if (window.loadShiftSummaryFilter) window.loadShiftSummaryFilter();
         if (window.loadShiftSummary) window.loadShiftSummary();
@@ -246,4 +251,9 @@ window.deleteBulk = async () => {
 
 if (typeof initAdminPanel === 'function') {
     initAdminPanel();
+    
+    // 🌟 ให้ระบบเช็กว่าขึ้นสัปดาห์ใหม่หรือยัง ตั้งแต่เปิดหน้าระบบมาเลย
+    if (typeof window.checkAndRunAutoRotation === 'function') {
+        window.checkAndRunAutoRotation();
+    }
 }

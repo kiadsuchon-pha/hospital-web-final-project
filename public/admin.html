@@ -96,6 +96,12 @@
                 <div class="header">
                     <h1><i class="fa-solid fa-calendar-check"></i> จัดการตารางเวรแพทย์</h1>
                     <div class="action-bar">
+                        
+                        <button class="btn btn-add" onclick="forceRotateSchedule()"
+                            style="margin-right: 15px; background: #6f42c1; box-shadow: 0 2px 8px rgba(111, 66, 193, 0.3);">
+                            <i class="fa-solid fa-clock-rotate-left"></i> ดันสัปดาห์หน้ามาเป็นปัจจุบัน
+                        </button>
+
                         <button class="btn btn-add" onclick="autoAssignSchedules()"
                             style="margin-right: 15px; background: #007bff; box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);">
                             <i class="fa-solid fa-wand-magic-sparkles"></i> จัดเวรอัตโนมัติ
@@ -146,15 +152,20 @@
 
                 <div id="scheduleNextContainer" class="schedule-sub-view">
 
-                    <div class="filter-bar" style="margin-bottom: 20px;">
+                    <div class="filter-bar" style="margin-bottom: 20px; justify-content: space-between;">
                         <div class="filter-group" style="max-width: 300px;">
-                            <label class="filter-label"><i class="fa-solid fa-hospital"></i> เลือกแผนกที่จะดู
-                                (สัปดาห์ถัดไป)</label>
+                            <label class="filter-label"><i class="fa-solid fa-hospital"></i> เลือกแผนกที่จะดู (สัปดาห์ถัดไป)</label>
                             <select id="nextSchedFilterDept" class="filter-input" onchange="loadScheduleManager()">
                                 <option value="">-- แสดงทุกแผนก --</option>
                             </select>
                         </div>
+                        <div>
+                            <button class="btn btn-add" onclick="copyCurrentToNextSchedule()" style="background: #17a2b8; box-shadow: 0 2px 8px rgba(23, 162, 184, 0.3);">
+                                <i class="fa-solid fa-copy"></i> คัดลอกตารางจากปัจจุบัน
+                            </button>
+                        </div>
                     </div>
+
                     <div class="grid-editor-container">
                         <table class="grid-table">
                             <thead>
@@ -416,23 +427,19 @@
 
     <div id="toast" class="toast">สำเร็จ!</div>
 
-
-
     <script type="module" src="js/admin/admin.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const mobileMenuBtn = document.getElementById('mobileMenuBtn');
             const sidebarMenu = document.getElementById('sidebarMenu');
 
-            // เปิด/ปิด Sidebar
             if (mobileMenuBtn && sidebarMenu) {
                 mobileMenuBtn.addEventListener('click', (e) => {
-                    e.stopPropagation(); // ป้องกัน event ทะลุ
+                    e.stopPropagation(); 
                     sidebarMenu.classList.toggle('active-mobile');
                 });
             }
 
-            // กดพื้นที่อื่น (Main Content) แล้วปิด Sidebar อัตโนมัติ (เฉพาะในมือถือ)
             document.addEventListener('click', (e) => {
                 if (window.innerWidth <= 768) {
                     if (sidebarMenu.classList.contains('active-mobile') &&
